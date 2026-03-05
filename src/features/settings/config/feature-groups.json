@@ -1,0 +1,56 @@
+[
+  {
+    "id": "modbus",
+    "title": "Modbus",
+    "description": "Communication and protocol settings.",
+    "commandIds": ["mty", "mip", "mpn", "mbd", "mto", "mre", "miv", "modiuc", "modiuaddA", "modiuaddB"]
+  },
+  {
+    "id": "setpoints",
+    "title": "Setpoints",
+    "description": "Temperature setpoints and allowed ranges.",
+    "commandIds": ["mit", "mxt", "ats", "ets", "tlt", "tum"]
+  },
+  {
+    "id": "preheating-precooling",
+    "title": "Preheating / Precooling",
+    "description": "Warm-up and cool-down scheduling behavior.",
+    "commandIds": ["ptm", "pht", "pct", "dhc", "dcc"]
+  },
+  {
+    "id": "conditions-heating-cooling",
+    "title": "Conditions Heating Cooling",
+    "description": "Rules and timing constraints for switching.",
+    "commandIds": ["cha", "chu", "cca", "ccu", "ctt", "hct", "cic", "scc", "mct", "hys"]
+  },
+  {
+    "id": "connected-systems",
+    "title": "Connected Heaters / Coolers / Thermostat",
+    "description": "Configure connected heater, cooler, thermostat and legacy boiler type.",
+    "commandIds": ["thr", "cht", "cct", "bor"]
+  },
+  {
+    "id": "nighttime",
+    "title": "Nighttime",
+    "description": "Night schedule and night behavior controls.",
+    "commandIds": ["dtn", "tvn", "cdn", "thc"]
+  },
+  {
+    "id": "reservations",
+    "title": "Reservations",
+    "description": "Reservation commands and reservation-time behavior.",
+    "commandIds": ["mls"]
+  },
+  {
+    "id": "indoor-units",
+    "title": "Indoor Units",
+    "description": "Indoor unit behavior like fan and swing.",
+    "commandIds": []
+  },
+  {
+    "id": "hvac-multi-unit",
+    "title": "HVAC Multi-Unit",
+    "description": "Multi-unit HVAC selection and routing.",
+    "commandIds": []
+  }
+]

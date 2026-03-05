@@ -1,0 +1,222 @@
+{
+  "initialCommands": [
+    "CSHWMIV5",
+    "CSHWMTO1000",
+    "CSHWMRE1",
+    "CSHWPTM5",
+    "CSHWPHT0",
+    "CSHWPCT0",
+    "CSHWMIT15",
+    "CSHWMXT30",
+    "CSHWATS20",
+    "CSHWETS16",
+    "CSHWDHC1",
+    "CSHWDCC1",
+    "CSHWCHA0",
+    "CSHWCHU0",
+    "CSHWCCA0",
+    "CSHWCCU0",
+    "CSHWTHC30",
+    "CSHWDTN2",
+    "CSHWTVN00000800",
+    "CSHWTHR0",
+    "CSHWSCC1",
+    "CSHWMLS86400",
+    "CSHWBOR0",
+    "CSHWCHT6",
+    "CSHWCCT6",
+    "CSHWCTT10",
+    "CSHWHCT10",
+    "CSHWMCT21",
+    "CSHWTLT2",
+    "CSHWTUM30",
+    "CSHWCDN0",
+    "CSHWMTY1",
+    "CSHWMIP172.20.1.18",
+    "CSHWMPN502",
+    "CSHWMBD9600",
+    "CSHWMODIUCLEAR",
+    "CSHWMODIUADD320;1",
+    "CSHWMODIUADD336;1"
+  ],
+  "commands": [
+    { "id": "miv", "code": "CSHWMIV", "label": "Modbus Interval", "valueType": "number", "features": ["modbus"] },
+    { "id": "mto", "code": "CSHWMTO", "label": "Modbus Timeout", "valueType": "number", "features": ["modbus"] },
+    { "id": "mre", "code": "CSHWMRE", "label": "Modbus Retries", "valueType": "number", "features": ["modbus"] },
+    { "id": "ptm", "code": "CSHWPTM", "label": "Preheat/Precool Flags", "valueType": "number", "features": ["preheating-precooling"] },
+    { "id": "pht", "code": "CSHWPHT", "label": "Preheating Start", "valueType": "number", "features": ["preheating-precooling"] },
+    { "id": "pct", "code": "CSHWPCT", "label": "Precooling Start", "valueType": "number", "features": ["preheating-precooling"] },
+    { "id": "mit", "code": "CSHWMIT", "label": "Minimum Setpoint", "valueType": "number", "features": ["setpoints"] },
+    { "id": "mxt", "code": "CSHWMXT", "label": "Maximum Setpoint", "valueType": "number", "features": ["setpoints"] },
+    { "id": "ats", "code": "CSHWATS", "label": "Arrival Setpoint", "valueType": "number", "features": ["setpoints"] },
+    { "id": "ets", "code": "CSHWETS", "label": "Empty Setpoint", "valueType": "number", "features": ["setpoints"] },
+    { "id": "dhc", "code": "CSHWDHC", "label": "Heat-up Capacity", "valueType": "number", "features": ["preheating-precooling"] },
+    { "id": "dcc", "code": "CSHWDCC", "label": "Cool-down Capacity", "valueType": "number", "features": ["preheating-precooling"] },
+    {
+      "id": "cha",
+      "code": "CSHWCHA",
+      "label": "Minimum On Time (Heating)",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": { "description": "Seconds heater must stay on before turning off.", "min": 0, "max": 86400, "step": 1 }
+    },
+    {
+      "id": "chu",
+      "code": "CSHWCHU",
+      "label": "Minimum Off Time (Heating)",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": { "description": "Seconds heater must stay off before turning on.", "min": 0, "max": 86400, "step": 1 }
+    },
+    {
+      "id": "cca",
+      "code": "CSHWCCA",
+      "label": "Minimum On Time (Cooling)",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": { "description": "Seconds cooler must stay on before turning off.", "min": 0, "max": 86400, "step": 1 }
+    },
+    {
+      "id": "ccu",
+      "code": "CSHWCCU",
+      "label": "Minimum Off Time (Cooling)",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": { "description": "Seconds cooler must stay off before turning on.", "min": 0, "max": 86400, "step": 1 }
+    },
+    { "id": "thc", "code": "CSHWTHC", "label": "Temporary Hold", "valueType": "number", "features": ["nighttime"] },
+    { "id": "dtn", "code": "CSHWDTN", "label": "Night Temperature", "valueType": "number", "features": ["nighttime"] },
+    { "id": "tvn", "code": "CSHWTVN", "label": "Night Start Time", "valueType": "number", "features": ["nighttime"] },
+    {
+      "id": "thr",
+      "code": "CSHWTHR",
+      "label": "Connected Thermostat Type",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": {
+        "description": "Type of connected thermostat.",
+        "options": [
+          { "value": "0", "label": "NA (0): Not available" },
+          { "value": "1", "label": "OTH (1): Opentherm" }
+        ]
+      }
+    },
+    {
+      "id": "scc",
+      "code": "CSHWSCC",
+      "label": "Cooling Support Enabled",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": { "description": "1 enabled, 0 disabled.", "min": 0, "max": 1, "step": 1 }
+    },
+    { "id": "mls", "code": "CSHWMLS", "label": "Vacant Timeout", "valueType": "number", "features": ["reservations"] },
+    {
+      "id": "bor",
+      "code": "CSHWBOR",
+      "label": "Connected Boiler Type",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "deprecated": true,
+      "field": {
+        "description": "Deprecated. Only active when CSHWCHT and CSHWCCT are both 0.",
+        "options": [
+          { "value": "0", "label": "NA (0): Not available" },
+          { "value": "1", "label": "OTH (1): Opentherm" },
+          { "value": "2", "label": "REL (2): Relais on/off" }
+        ]
+      }
+    },
+    {
+      "id": "cht",
+      "code": "CSHWCHT",
+      "label": "Connected Heater Type",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": {
+        "description": "Type of connected heater.",
+        "options": [
+          { "value": "0", "label": "NA (0): Not available" },
+          { "value": "1", "label": "OTH (1): Opentherm" },
+          { "value": "2", "label": "REL (2): Relais on/off" },
+          { "value": "3", "label": "SAM (3): Samsung via Intesis (Deprecated)" },
+          { "value": "4", "label": "DAI (4): Daikin RTD-NET Modbus RTU" },
+          { "value": "5", "label": "CMN (5): CoolMasterNet" },
+          { "value": "6", "label": "CMA (6): CoolMasterNet for Aedes" },
+          { "value": "7", "label": "MIT (7): Mitsubishi via Intesis RTU" },
+          { "value": "8", "label": "COP (8): Coolplug via Modbus RTU" }
+        ]
+      }
+    },
+    {
+      "id": "cct",
+      "code": "CSHWCCT",
+      "label": "Connected Cooler Type",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": {
+        "description": "Type of connected cooler.",
+        "options": [
+          { "value": "0", "label": "NA (0): Not available" },
+          { "value": "1", "label": "OTH (1): Opentherm" },
+          { "value": "2", "label": "REL (2): Relais on/off" },
+          { "value": "3", "label": "SAM (3): Samsung via Intesis (Deprecated)" },
+          { "value": "4", "label": "DAI (4): Daikin RTD-NET Modbus RTU" },
+          { "value": "5", "label": "CMN (5): CoolMasterNet" },
+          { "value": "6", "label": "CMA (6): CoolMasterNet for Aedes" },
+          { "value": "7", "label": "MIT (7): Mitsubishi via Intesis RTU" },
+          { "value": "8", "label": "COP (8): Coolplug via Modbus RTU" }
+        ]
+      }
+    },
+    {
+      "id": "ctt",
+      "code": "CSHWCTT",
+      "label": "Cooling to Heating Timeout",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": { "description": "Minimum seconds required when switching from cooling to heating.", "min": 0, "step": 1 }
+    },
+    {
+      "id": "hct",
+      "code": "CSHWHCT",
+      "label": "Heating to Cooling Timeout",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": { "description": "Minimum seconds required when switching from heating to cooling.", "min": 0, "step": 1 }
+    },
+    {
+      "id": "mct",
+      "code": "CSHWMCT",
+      "label": "Minimum Cooling Temperature",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": { "description": "Minimum temperature in °C before cooling can activate.", "step": 0.1 }
+    },
+    { "id": "tlt", "code": "CSHWTLT", "label": "Temperature Lower Threshold", "valueType": "number", "features": ["setpoints"] },
+    { "id": "tum", "code": "CSHWTUM", "label": "Temperature Upper Threshold", "valueType": "number", "features": ["setpoints"] },
+    { "id": "cdn", "code": "CSHWCDN", "label": "Cooling During Night", "valueType": "number", "features": ["nighttime"] },
+    { "id": "mty", "code": "CSHWMTY", "label": "Modbus Type", "valueType": "number", "features": ["modbus"] },
+    { "id": "mip", "code": "CSHWMIP", "label": "Modbus Host", "valueType": "text", "features": ["modbus"] },
+    { "id": "mpn", "code": "CSHWMPN", "label": "Modbus Port", "valueType": "number", "features": ["modbus"] },
+    { "id": "mbd", "code": "CSHWMBD", "label": "Modbus Baud", "valueType": "number", "features": ["modbus"] },
+    { "id": "modiuc", "code": "CSHWMODIUC", "label": "Module Device", "valueType": "text", "features": ["modbus"] },
+    { "id": "modiuaddA", "code": "CSHWMODIUADD", "label": "Module Address A", "valueType": "text", "features": ["modbus"] },
+    { "id": "modiuaddB", "code": "CSHWMODIUADD", "label": "Module Address B", "valueType": "text", "features": ["modbus"] },
+    {
+      "id": "cic",
+      "code": "CSHWCIC",
+      "label": "Cooling Inhibit Configuration",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": { "description": "Mode: 0 none, 1 input1, 2 input2, 3 inverted input1, 4 inverted input2.", "min": 0, "max": 4, "step": 1 }
+    },
+    {
+      "id": "hys",
+      "code": "CSHWHYS",
+      "label": "Heating/Cooling Hysteresis",
+      "valueType": "number",
+      "features": ["conditions-heating-cooling"],
+      "field": { "description": "Temperature hysteresis buffer in °C between heating and cooling.", "step": 0.1 }
+    }
+  ]
+}
