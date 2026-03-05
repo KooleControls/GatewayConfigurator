@@ -107,11 +107,33 @@ export function useCommandHighlightTick(commandCode: string) {
   )
 }
 
+type LatestHighlightedCommandSnapshot = {
+  commandCode: string | null
+  tick: number
+}
+
+let latestHighlightedCommandSnapshot: LatestHighlightedCommandSnapshot = {
+  commandCode: state.latestHighlightedCommandCode,
+  tick: state.highlightTick,
+}
+
 function getLatestHighlightedCommandSnapshot() {
-  return {
-    commandCode: state.latestHighlightedCommandCode,
-    tick: state.highlightTick,
+  const nextCommandCode = state.latestHighlightedCommandCode
+  const nextTick = state.highlightTick
+
+  if (
+    latestHighlightedCommandSnapshot.commandCode === nextCommandCode &&
+    latestHighlightedCommandSnapshot.tick === nextTick
+  ) {
+    return latestHighlightedCommandSnapshot
   }
+
+  latestHighlightedCommandSnapshot = {
+    commandCode: nextCommandCode,
+    tick: nextTick,
+  }
+
+  return latestHighlightedCommandSnapshot
 }
 
 export function useLatestHighlightedCommand() {

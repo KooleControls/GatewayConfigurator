@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import {
   Accordion,
@@ -55,6 +55,11 @@ function RawCommandsPanel() {
   const commandsText = useRawCommands()
   const { commandCode, tick } = useLatestHighlightedCommand()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [lineFlash, setLineFlash] = useState<{
+    top: number
+    height: number
+    key: string
+  } | null>(null)
 
   useEffect(() => {
     if (!tick || !textareaRef.current) {
@@ -62,19 +67,50 @@ function RawCommandsPanel() {
     }
 
     const element = textareaRef.current
-    element.classList.remove("command-flash-textarea")
-    void element.offsetWidth
-    element.classList.add("command-flash-textarea")
+    if (!commandCode) {
+      setLineFlash(null)
+      return
+    }
+
+    const lines = commandsText.split(/\r?\n/)
+    const changedLineIndex = lines.findIndex((line) =>
+      line.trimStart().startsWith(commandCode)
+    )
+
+    if (changedLineIndex === -1) {
+      setLineFlash(null)
+      return
+    }
+
+    const computedStyle = window.getComputedStyle(element)
+    const paddingTop = Number.parseFloat(computedStyle.paddingTop) || 0
+    const lineHeight =
+      Number.parseFloat(computedStyle.lineHeight) ||
+      (Number.parseFloat(computedStyle.fontSize) || 16) * 1.5
+    const top = paddingTop + changedLineIndex * lineHeight - element.scrollTop
+    const isOutOfView = top + lineHeight < 0 || top > element.clientHeight
+
+    if (isOutOfView) {
+      setLineFlash(null)
+      return
+    }
+
+    setLineFlash({
+      top,
+      height: lineHeight,
+      key: `${commandCode}-${tick}`,
+    })
 
     const timeoutId = window.setTimeout(() => {
-      element.classList.remove("command-flash-textarea")
-    }, 950)
+      setLineFlash((currentLineFlash) =>
+        currentLineFlash?.key === `${commandCode}-${tick}` ? null : currentLineFlash
+      )
+    }, 1500)
 
     return () => {
       window.clearTimeout(timeoutId)
-      element.classList.remove("command-flash-textarea")
     }
-  }, [tick])
+  }, [commandCode, commandsText, tick])
 
   return (
     <Card className="h-full">
@@ -86,24 +122,26 @@ function RawCommandsPanel() {
       </CardHeader>
       <CardContent className="min-h-0 flex-1">
         <div className="flex h-full min-h-0 flex-col gap-1">
-          <Label htmlFor="raw-commands" className="justify-between gap-3">
-            <span>Raw Commands</span>
-            {commandCode ? (
-              <span
-                key={`${commandCode}-${tick}`}
-                className="command-flash-badge rounded-sm px-1.5 py-0.5 text-xs text-muted-foreground"
-              >
-                Updated: {commandCode}
-              </span>
+          <Label htmlFor="raw-commands">Raw Commands</Label>
+          <div className="relative min-h-0 flex-1">
+            {lineFlash ? (
+              <div
+                key={lineFlash.key}
+                className="command-line-flash pointer-events-none absolute left-2 right-2 z-10 rounded-sm"
+                style={{
+                  top: `${lineFlash.top}px`,
+                  height: `${lineFlash.height}px`,
+                }}
+              />
             ) : null}
-          </Label>
-          <Textarea
-            ref={textareaRef}
-            id="raw-commands"
-            value={commandsText}
-            className="min-h-0 flex-1 font-mono"
-            onChange={(event) => setRawCommands(event.target.value)}
-          />
+            <Textarea
+              ref={textareaRef}
+              id="raw-commands"
+              value={commandsText}
+              className="min-h-0 flex-1 font-mono"
+              onChange={(event) => setRawCommands(event.target.value)}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
