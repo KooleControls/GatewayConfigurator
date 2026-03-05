@@ -15,6 +15,8 @@ type SettingsState = {
   highlightTickByCode: Record<string, number>
   latestHighlightedCommandCode: string | null
   highlightTick: number
+  latestNavigatedCommandCode: string | null
+  navigateTick: number
 }
 
 let state: SettingsState = {
@@ -22,6 +24,8 @@ let state: SettingsState = {
   highlightTickByCode: {},
   latestHighlightedCommandCode: null,
   highlightTick: 0,
+  latestNavigatedCommandCode: null,
+  navigateTick: 0,
 }
 
 const knownCommandCodes = [...new Set(COMMAND_REGISTRY.commands.map((command) => command.code))]
@@ -116,6 +120,29 @@ export function highlightCommandByCode(commandCode: string) {
   emitChange()
 }
 
+export function navigateToCommandByCode(commandCode: string) {
+  if (!knownCommandCodeSet.has(commandCode)) {
+    return
+  }
+
+  const nextHighlightTick = state.highlightTick + 1
+  const nextNavigateTick = state.navigateTick + 1
+
+  state = {
+    ...state,
+    highlightTickByCode: {
+      ...state.highlightTickByCode,
+      [commandCode]: nextHighlightTick,
+    },
+    latestHighlightedCommandCode: commandCode,
+    highlightTick: nextHighlightTick,
+    latestNavigatedCommandCode: commandCode,
+    navigateTick: nextNavigateTick,
+  }
+
+  emitChange()
+}
+
 function getCommandHighlightSnapshot(commandCode: string) {
   return state.highlightTickByCode[commandCode] ?? 0
 }
@@ -162,6 +189,43 @@ export function useLatestHighlightedCommand() {
     subscribe,
     getLatestHighlightedCommandSnapshot,
     getLatestHighlightedCommandSnapshot
+  )
+}
+
+type LatestNavigatedCommandSnapshot = {
+  commandCode: string | null
+  tick: number
+}
+
+let latestNavigatedCommandSnapshot: LatestNavigatedCommandSnapshot = {
+  commandCode: state.latestNavigatedCommandCode,
+  tick: state.navigateTick,
+}
+
+function getLatestNavigatedCommandSnapshot() {
+  const nextCommandCode = state.latestNavigatedCommandCode
+  const nextTick = state.navigateTick
+
+  if (
+    latestNavigatedCommandSnapshot.commandCode === nextCommandCode &&
+    latestNavigatedCommandSnapshot.tick === nextTick
+  ) {
+    return latestNavigatedCommandSnapshot
+  }
+
+  latestNavigatedCommandSnapshot = {
+    commandCode: nextCommandCode,
+    tick: nextTick,
+  }
+
+  return latestNavigatedCommandSnapshot
+}
+
+export function useLatestNavigatedCommand() {
+  return useSyncExternalStore(
+    subscribe,
+    getLatestNavigatedCommandSnapshot,
+    getLatestNavigatedCommandSnapshot
   )
 }
 

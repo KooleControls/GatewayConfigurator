@@ -9,12 +9,10 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { FeatureGroupSection } from "@/features/settings/components/feature-group-section"
@@ -24,6 +22,7 @@ import { FEATURE_GROUPS } from "@/features/settings/config/feature-groups"
 import {
   setRawCommands,
   useLatestHighlightedCommand,
+  useLatestNavigatedCommand,
   useRawCommands,
 } from "@/features/settings/store/settings-store"
 import type { CommandRegistryEntry } from "@/features/settings/types"
@@ -65,7 +64,31 @@ function SettingsFeaturesPanel({
   onSearchQueryChange,
 }: SettingsFeaturesPanelProps) {
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>([])
+  const { commandCode: navigatedCommandCode, tick: navigatedCommandTick } =
+    useLatestNavigatedCommand()
   const normalizedSearchTerm = searchQuery.trim().toLowerCase()
+
+  const groupIdsByCommandCode = useMemo(() => {
+    const groupedGroupIds = new Map<string, string[]>()
+
+    for (const group of FEATURE_GROUPS) {
+      const commandEntries = getFeatureGroupCommandEntries(group.id)
+
+      for (const commandEntry of commandEntries) {
+        const existingGroupIds = groupedGroupIds.get(commandEntry.code)
+
+        if (existingGroupIds) {
+          if (!existingGroupIds.includes(group.id)) {
+            existingGroupIds.push(group.id)
+          }
+        } else {
+          groupedGroupIds.set(commandEntry.code, [group.id])
+        }
+      }
+    }
+
+    return groupedGroupIds
+  }, [])
 
   const entriesByCode = useMemo(() => {
     const groupedEntries = new Map<string, CommandRegistryEntry[]>()
@@ -131,17 +154,39 @@ function SettingsFeaturesPanel({
     })
   }, [groupsWithMatches, normalizedSearchTerm])
 
+  useEffect(() => {
+    if (!navigatedCommandTick || !navigatedCommandCode) {
+      return
+    }
+
+    const targetGroupIds = groupIdsByCommandCode.get(navigatedCommandCode)
+
+    if (!targetGroupIds || targetGroupIds.length === 0) {
+      return
+    }
+
+    setOpenAccordionItems((currentOpenItems) => {
+      let hasChanges = false
+      const nextOpenItems = [...currentOpenItems]
+
+      for (const groupId of targetGroupIds) {
+        if (!nextOpenItems.includes(groupId)) {
+          nextOpenItems.push(groupId)
+          hasChanges = true
+        }
+      }
+
+      return hasChanges ? nextOpenItems : currentOpenItems
+    })
+  }, [groupIdsByCommandCode, navigatedCommandCode, navigatedCommandTick])
+
   return (
     <Card className="h-full">
       <CardHeader>
         <CardTitle>Features</CardTitle>
-        <CardDescription>
-          Expand sections and add feature settings one by one.
-        </CardDescription>
       </CardHeader>
       <CardContent className="min-h-0 flex-1 overflow-y-auto pr-2">
         <div className="mb-3">
-          <Label htmlFor="command-search">Search commands</Label>
           <Input
             id="command-search"
             value={searchQuery}
@@ -309,13 +354,9 @@ function RawCommandsPanel({ searchQuery }: RawCommandsPanelProps) {
     <Card className="h-full">
       <CardHeader>
         <CardTitle>Raw Commands</CardTitle>
-        <CardDescription>
-          Source command text that stays visible while configuring features.
-        </CardDescription>
       </CardHeader>
       <CardContent className="min-h-0 flex-1">
         <div className="flex h-full min-h-0 flex-col gap-1">
-          <Label htmlFor="raw-commands">Raw Commands</Label>
           <div className="relative min-h-0 flex-1">
             {lineFlash ? (
               <div

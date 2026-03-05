@@ -16,7 +16,7 @@ import {
   isNumericEntry,
 } from "@/features/settings/config/command-registry"
 import {
-  highlightCommandByCode,
+  navigateToCommandByCode,
   useCommandHighlightTick,
   useCommandValue,
 } from "@/features/settings/store/settings-store"
@@ -123,7 +123,7 @@ function CommandField({ command }: CommandFieldProps) {
                 variant="link"
                 size="xs"
                 className="h-auto px-0 text-xs/relaxed"
-                onClick={() => highlightCommandByCode(replacement.code)}
+                onClick={() => navigateToCommandByCode(replacement.code)}
               >
                 {replacement.code}
               </Button>
