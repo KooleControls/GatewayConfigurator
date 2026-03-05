@@ -3,7 +3,7 @@
     "id": "modbus",
     "title": "Modbus",
     "description": "Communication and protocol settings.",
-    "commandIds": ["mty", "mip", "mpn", "mbd", "mto", "mre", "miv", "modiuc", "modiuaddA", "modiuaddB"]
+    "commandIds": ["mty", "mip", "mpn", "mbd", "mto", "mre", "miv", "modiuc", "modiuaddA", "modiuaddB", "modiuget"]
   },
   {
     "id": "setpoints",
@@ -33,24 +33,24 @@
     "id": "nighttime",
     "title": "Nighttime",
     "description": "Night schedule and night behavior controls.",
-    "commandIds": ["dtn", "tvn", "cdn", "thc"]
+    "commandIds": ["dtn", "tvn", "cdn", "thc", "ent", "ntr", "ntd", "dntr", "dntd"]
   },
   {
     "id": "reservations",
     "title": "Reservations",
     "description": "Reservation commands and reservation-time behavior.",
-    "commandIds": ["mls"]
+    "commandIds": ["mls", "rdr", "rlrs", "rars", "drlrs", "drars"]
   },
   {
     "id": "indoor-units",
     "title": "Indoor Units",
     "description": "Indoor unit behavior like fan and swing.",
-    "commandIds": []
+    "commandIds": ["cfs", "csw", "rae"]
   },
   {
     "id": "hvac-multi-unit",
     "title": "HVAC Multi-Unit",
     "description": "Multi-unit HVAC selection and routing.",
-    "commandIds": []
+    "commandIds": ["hvacw", "hvacr"]
   }
 ]
