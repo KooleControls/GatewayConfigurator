@@ -125,7 +125,7 @@ export function CommandField({ command, searchQuery = "" }: CommandFieldProps) {
 
     return (
         <Field className={cn("h-full gap-1.5", isFlashing && "command-flash")}>
-            <div className="space-y-0.5">
+            <div className="flex-1 min-h-0 space-y-0.5">
                 <FieldTitle className="flex w-full items-start justify-between text-sm leading-tight">
                     <span>{definition.label}</span>
                     <span className="flex items-center gap-2">
@@ -140,7 +140,7 @@ export function CommandField({ command, searchQuery = "" }: CommandFieldProps) {
                     <FieldDescription className="text-sm">{definition.deprecatedMessage}</FieldDescription>
                 ) : null}
             </div>
-            <FieldContent className="mt-auto">
+            <FieldContent className="mt-auto w-full shrink-0 flex-none">
                 {definition.options?.length ? (
                     <Select value={value || String(definition.defaultValue ?? "")} onValueChange={updateValue}>
                         <SelectTrigger className="h-9 w-full bg-background text-sm">
