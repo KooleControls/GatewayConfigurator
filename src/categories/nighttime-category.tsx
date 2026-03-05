@@ -1,15 +1,19 @@
 import { CommandField } from "@/components/command-field";
 import { FieldGroup } from "@/components/ui/field";
 
-export function NighttimeCategory() {
+type NighttimeCategoryProps = {
+    searchQuery?: string;
+};
+
+export function NighttimeCategory({ searchQuery = "" }: NighttimeCategoryProps) {
     return (
         <FieldGroup className="grid grid-cols-1 gap-6 px-2 pb-4 md:grid-cols-2">
-            <CommandField command="CSHWDTN" />
-            <CommandField command="CSHWTVN" />
-            <CommandField command="CSHWCDN" />
-            <CommandField command="CSHWENT" />
-            <CommandField command="CSHWNTR" />
-            <CommandField command="CSHWNTD" />
+            <CommandField command="CSHWDTN" searchQuery={searchQuery} />
+            <CommandField command="CSHWTVN" searchQuery={searchQuery} />
+            <CommandField command="CSHWCDN" searchQuery={searchQuery} />
+            <CommandField command="CSHWENT" searchQuery={searchQuery} />
+            <CommandField command="CSHWNTR" searchQuery={searchQuery} />
+            <CommandField command="CSHWNTD" searchQuery={searchQuery} />
         </FieldGroup>
     );
 }

@@ -1,8 +1,11 @@
+import { useState } from "react"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { CommandsCard } from "./commands-card";
 import { SettingsCard } from "./settings-card";
 
 export function App() {
+	const [searchQuery, setSearchQuery] = useState("")
+
 	return (
 		<main className="flex h-screen flex-col bg-background text-foreground">
 			<header className="border-b border-border">
@@ -14,10 +17,10 @@ export function App() {
 
 			<div className="mx-auto grid h-full w-full max-w-7xl flex-1 grid-cols-1 gap-4 p-4 min-h-0 lg:grid-cols-2">
 				<div className="min-h-0">
-					<SettingsCard />
+					<SettingsCard searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />
 				</div>
 				<div className="min-h-0">
-					<CommandsCard />
+					<CommandsCard searchQuery={searchQuery} />
 				</div>
 			</div>
 

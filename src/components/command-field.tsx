@@ -15,11 +15,13 @@ import {
     FieldTitle,
 } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
+import { matchesCommandQuery } from "@/lib/command-search";
 import commandsRegistry from "@/commands-registery.json";
 import { commandsStore, useCommandsStore } from "@/store/commands-store";
 
 type CommandFieldProps = {
     command: string;
+    searchQuery?: string;
 };
 
 type RegistryValueType = "text" | "number" | "decimal";
@@ -65,7 +67,7 @@ function sanitizeValue(value: string, valueType: RegistryValueType) {
     return value;
 }
 
-export function CommandField({ command }: CommandFieldProps) {
+export function CommandField({ command, searchQuery = "" }: CommandFieldProps) {
     const { commands, lastChange } = useCommandsStore();
     const [isFlashing, setIsFlashing] = useState(false);
     const definition = registry.find((entry) => entry.code === command);
@@ -96,6 +98,10 @@ export function CommandField({ command }: CommandFieldProps) {
         return null;
     }
 
+    if (!matchesCommandQuery(definition.code, searchQuery)) {
+        return null;
+    }
+
     const value = commands.find((entry) => entry.command === command)?.value ?? "";
     const inputType = definition.valueType === "decimal" ? "number" : definition.valueType;
     const placeholder =
@@ -118,21 +124,23 @@ export function CommandField({ command }: CommandFieldProps) {
     };
 
     return (
-        <Field className={cn("gap-1.5", isFlashing && "command-flash")}>
-            <FieldTitle className="flex w-full items-center justify-between text-sm leading-tight">
-                <span>{definition.label}</span>
-                <span className="flex items-center gap-2">
-                    {definition.deprecated ? <Badge variant="destructive">Deprecated</Badge> : null}
-                    <span className="text-sm font-normal text-muted-foreground">{definition.code}</span>
-                </span>
-            </FieldTitle>
-            {definition.description ? (
-                <FieldDescription className="text-sm">{definition.description}</FieldDescription>
-            ) : null}
-            {definition.deprecatedMessage ? (
-                <FieldDescription className="text-sm">{definition.deprecatedMessage}</FieldDescription>
-            ) : null}
-            <FieldContent>
+        <Field className={cn("h-full gap-1.5", isFlashing && "command-flash")}>
+            <div className="space-y-0.5">
+                <FieldTitle className="flex w-full items-start justify-between text-sm leading-tight">
+                    <span>{definition.label}</span>
+                    <span className="flex items-center gap-2">
+                        {definition.deprecated ? <Badge variant="destructive">Deprecated</Badge> : null}
+                        <span className="text-sm font-normal text-muted-foreground">{definition.code}</span>
+                    </span>
+                </FieldTitle>
+                {definition.description ? (
+                    <FieldDescription className="text-sm">{definition.description}</FieldDescription>
+                ) : null}
+                {definition.deprecatedMessage ? (
+                    <FieldDescription className="text-sm">{definition.deprecatedMessage}</FieldDescription>
+                ) : null}
+            </div>
+            <FieldContent className="mt-auto">
                 {definition.options?.length ? (
                     <Select value={value || String(definition.defaultValue ?? "")} onValueChange={updateValue}>
                         <SelectTrigger className="h-9 w-full bg-background text-sm">
@@ -164,7 +172,6 @@ export function CommandField({ command }: CommandFieldProps) {
                         }}
                     />
                 )}
-
             </FieldContent>
         </Field>
     );

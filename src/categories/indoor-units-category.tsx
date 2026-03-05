@@ -21,9 +21,27 @@ const indoorUnitFlashCommands = new Set<string>([
     "CSHWMODIUADB",
 ]);
 
-export function IndoorUnitsCategory() {
+const indoorUnitsSearchText = [
+    "indoor units",
+    "indoor unit",
+    "master",
+    "address",
+    "cshwmodiuclear",
+    "cshwmodiuadd",
+    "cshwmodiuadb",
+].join(" ");
+
+type IndoorUnitsCategoryProps = {
+    searchQuery?: string;
+};
+
+export function IndoorUnitsCategory({ searchQuery = "" }: IndoorUnitsCategoryProps) {
     const { commands, lastChange } = useCommandsStore();
     const [isFlashing, setIsFlashing] = useState(false);
+
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const isSearchMatch =
+        !normalizedSearch || indoorUnitsSearchText.includes(normalizedSearch);
 
     const entries = useMemo(() => commandsStore.getIndoorUnitEntries(commands), [commands]);
 
@@ -53,6 +71,10 @@ export function IndoorUnitsCategory() {
     const updateEntries = (nextEntries: IndoorUnitEntry[]) => {
         commandsStore.setIndoorUnitEntries(nextEntries);
     };
+
+    if (!isSearchMatch) {
+        return null;
+    }
 
     return (
         <FieldGroup className="gap-3 px-2 pb-4">
