@@ -1,0 +1,24 @@
+{
+  "commands": [
+    {
+      "command": "CSHWMPN",
+      "name": "Set Modbus Port",
+      "description": "Configures the network port for Modbus TCP communication.",
+      "usage": "CSHWMPN[port]",
+      "arguments": [
+        {
+          "name": "port",
+          "description": "Integer specifying the port number."
+        }
+      ],
+      "example": "CSHWMPN502 sets the Modbus TCP port to 502.",
+      "input": {
+        "type": "number",
+        "min": 1,
+        "max": 65535,
+        "placeholder": "502",
+        "sanitize": "digits"
+      }
+    }
+  ]
+}

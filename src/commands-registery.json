@@ -1,0 +1,130 @@
+[
+    {
+        "id": "CSHWMTY",
+        "code": "CSHWMTY",
+        "category": "modbus",
+        "label": "Modbus Type",
+        "description": "Select Modbus transport.",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 1,
+        "options": [
+            {
+                "value": 0,
+                "label": "No Modbus (0)"
+            },
+            {
+                "value": 1,
+                "label": "TCP (1)"
+            },
+            {
+                "value": 2,
+                "label": "RTU (2)"
+            }
+        ]
+    },
+    {
+        "id": "CSHWMIP",
+        "code": "CSHWMIP",
+        "category": "modbus",
+        "label": "Modbus Host",
+        "valueType": "text",
+        "required": true,
+        "defaultValue": "172.20.1.18",
+        "valueFormat": "^(?:(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.){3}(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)$",
+        "description": "Host IP address used for Modbus TCP communication."
+    },
+    {
+        "id": "CSHWMPN",
+        "code": "CSHWMPN",
+        "category": "modbus",
+        "label": "Modbus Port",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 502,
+        "description": "Network port used for Modbus TCP communication.",
+        "min": 1,
+        "max": 65535,
+        "step": 1
+    },
+    {
+        "id": "CSHWMBD",
+        "code": "CSHWMBD",
+        "category": "modbus",
+        "label": "Modbus Baud",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 9600,
+        "description": "Baud rate used for Modbus RTU communication."
+    },
+    {
+        "id": "CSHWMTO",
+        "code": "CSHWMTO",
+        "category": "modbus",
+        "label": "Modbus Timeout",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 1000,
+        "description": "Modbus communication timeout in milliseconds."
+    },
+    {
+        "id": "CSHWMRE",
+        "code": "CSHWMRE",
+        "category": "modbus",
+        "label": "Modbus Retries",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 1,
+        "description": "Retry count for failed Modbus communication attempts."
+    },
+    {
+        "id": "CSHWMIV",
+        "code": "CSHWMIV",
+        "category": "modbus",
+        "label": "Modbus Interval",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 5,
+        "description": "Modbus polling interval in seconds."
+    },
+    {
+        "id": "CSHWMODIUCLEAR",
+        "code": "CSHWMODIUCLEAR",
+        "category": "modbus",
+        "label": "Module IU Clear",
+        "valueType": "text",
+        "deprecated": true,
+        "description": "Clears legacy indoor-unit configuration list.",
+        "deprecatedMessage": "Deprecated legacy command. Legacy indoor-unit commands take precedence over CSHWHVAC. Use CSHWHVAC and DSHWHVAC instead."
+    },
+    {
+        "id": "CSHWMODIUADD",
+        "code": "CSHWMODIUADD",
+        "category": "modbus",
+        "label": "Module Address A",
+        "valueType": "text",
+        "deprecated": true,
+        "defaultValue": "320;1",
+        "description": "Deprecated legacy command. Legacy indoor-unit commands take precedence over CSHWHVAC. Use CSHWHVAC and DSHWHVAC instead."
+    },
+    {
+        "id": "CSHWMODIUADB",
+        "code": "CSHWMODIUADB",
+        "category": "modbus",
+        "label": "Module Address B",
+        "valueType": "text",
+        "deprecated": true,
+        "defaultValue": "320;1",
+        "description": "Deprecated legacy command. Legacy indoor-unit commands take precedence over CSHWHVAC. Use CSHWHVAC and DSHWHVAC instead."
+    },
+    {
+        "id": "CSHWMODIUGET",
+        "code": "CSHWMODIUGET",
+        "category": "modbus",
+        "label": "Module IU Get",
+        "valueType": "text",
+        "deprecated": true,
+        "description": "Reads legacy indoor-unit configuration list.",
+        "deprecatedMessage": "Deprecated legacy command. Legacy indoor-unit commands take precedence over CSHWHVAC. Use CSHWHVAC and DSHWHVAC instead."
+    }
+]
