@@ -8,6 +8,12 @@ export type CommandEntry = {
 type CommandsState = {
     commandText: string;
     commands: CommandEntry[];
+    lastChange: {
+        id: number;
+        source: "field" | "text";
+        commandKeys: string[];
+        textLine: number | null;
+    } | null;
 };
 
 const commandLines = [
@@ -64,6 +70,23 @@ function parseCommandsText(text: string): CommandEntry[] {
         .map(parseCommand);
 }
 
+function getChangedCommandKeys(previous: CommandEntry[], next: CommandEntry[]): string[] {
+    const previousMap = new Map(previous.map((entry) => [entry.command, entry.value]));
+    const nextMap = new Map(next.map((entry) => [entry.command, entry.value]));
+    const commandKeys = new Set([...previousMap.keys(), ...nextMap.keys()]);
+
+    return [...commandKeys].filter((commandKey) => previousMap.get(commandKey) !== nextMap.get(commandKey));
+}
+
+function getTextLineForCommand(commands: CommandEntry[], commandKey: string | undefined): number | null {
+    if (!commandKey) {
+        return null;
+    }
+
+    const line = commands.findIndex((entry) => entry.command === commandKey);
+    return line >= 0 ? line : null;
+}
+
 export function serializeCommands(commands: CommandEntry[]): string {
     return commands.map((entry) => `${entry.command}${entry.value}`).join("\n");
 }
@@ -71,7 +94,19 @@ export function serializeCommands(commands: CommandEntry[]): string {
 let state: CommandsState = {
     commandText: commandLines.join("\n"),
     commands: commandLines.map(parseCommand),
+    lastChange: null,
 };
+
+let changeId = 0;
+
+function createChange(source: "field" | "text", commandKeys: string[], textLine: number | null) {
+    return {
+        id: ++changeId,
+        source,
+        commandKeys,
+        textLine,
+    };
+}
 
 const listeners = new Set<() => void>();
 
@@ -84,10 +119,18 @@ export const commandsStore = {
         return state;
     },
     setCommands(commands: CommandEntry[]) {
+        const changedCommandKeys = getChangedCommandKeys(state.commands, commands);
+        const primaryCommand = changedCommandKeys[0];
+
         state = {
             ...state,
             commands,
             commandText: serializeCommands(commands),
+            lastChange: createChange(
+                "field",
+                changedCommandKeys,
+                getTextLineForCommand(commands, primaryCommand),
+            ),
         };
         notify();
     },
@@ -95,18 +138,29 @@ export const commandsStore = {
         const commands = state.commands.map((entry) =>
             entry.command === command ? { ...entry, value } : entry,
         );
+
         state = {
             ...state,
             commands,
             commandText: serializeCommands(commands),
+            lastChange: createChange("field", [command], getTextLineForCommand(commands, command)),
         };
         notify();
     },
-    setCommandsFromText(text: string) {
+    setCommandsFromText(text: string, editedLine?: number) {
+        const commands = parseCommandsText(text);
+        const changedCommandKeys = getChangedCommandKeys(state.commands, commands);
+        const primaryCommand = changedCommandKeys[0];
+
         state = {
             ...state,
             commandText: text,
-            commands: parseCommandsText(text),
+            commands,
+            lastChange: createChange(
+                "text",
+                changedCommandKeys,
+                editedLine ?? getTextLineForCommand(commands, primaryCommand),
+            ),
         };
         notify();
     },

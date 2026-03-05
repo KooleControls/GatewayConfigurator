@@ -155,9 +155,9 @@
 }
 
 .command-flash {
-  animation: command-flash 900ms ease-out;
+  animation: command-flash 2000ms ease-out;
 }
 
 .command-line-flash {
-  animation: command-line-flash 1500ms ease-out forwards;
+  animation: command-line-flash 2000ms ease-out forwards;
 }

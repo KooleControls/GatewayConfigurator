@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +14,7 @@ import {
     FieldDescription,
     FieldTitle,
 } from "@/components/ui/field";
+import { cn } from "@/lib/utils";
 import commandsRegistry from "@/commands-registery.json";
 import { commandsStore, useCommandsStore } from "@/store/commands-store";
 
@@ -51,8 +53,31 @@ function sanitizeValue(value: string, valueType: RegistryValueType) {
 }
 
 export function CommandField({ command }: CommandFieldProps) {
-    const { commands } = useCommandsStore();
+    const { commands, lastChange } = useCommandsStore();
+    const [isFlashing, setIsFlashing] = useState(false);
     const definition = registry.find((entry) => entry.code === command);
+
+    useEffect(() => {
+        const shouldFlash =
+            lastChange?.source === "text" && lastChange.commandKeys.includes(command);
+
+        if (!shouldFlash) {
+            return;
+        }
+
+        setIsFlashing(false);
+        const frame = window.requestAnimationFrame(() => {
+            setIsFlashing(true);
+        });
+        const timeout = window.setTimeout(() => {
+            setIsFlashing(false);
+        }, 2000);
+
+        return () => {
+            window.cancelAnimationFrame(frame);
+            window.clearTimeout(timeout);
+        };
+    }, [command, lastChange]);
 
     if (!definition) {
         return null;
@@ -80,7 +105,7 @@ export function CommandField({ command }: CommandFieldProps) {
     };
 
     return (
-        <Field className="gap-1.5">
+        <Field className={cn("gap-1.5", isFlashing && "command-flash")}>
             <FieldTitle className="flex w-full items-center justify-between text-sm leading-tight">
                 <span>{definition.label}</span>
                 <span className="flex items-center gap-2">
