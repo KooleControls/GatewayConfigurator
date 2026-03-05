@@ -10,6 +10,8 @@ export function TimesCategory() {
             <CommandField command="CSHWCCU" />
             <CommandField command="CSHWCTT" />
             <CommandField command="CSHWHCT" />
+            <CommandField command="CSHWTHC" />
+            <CommandField command="CSHWMLS" />
         </FieldGroup>
     );
 }

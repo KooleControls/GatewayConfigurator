@@ -249,6 +249,50 @@
         ]
     },
     {
+        "id": "CSHWCFS",
+        "code": "CSHWCFS",
+        "category": "hvac",
+        "label": "Set Master Fan Speed",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Sets indoor-unit master fan speed; supported values depend on brand/model.",
+        "min": 0,
+        "step": 1
+    },
+    {
+        "id": "CSHWCSW",
+        "code": "CSHWCSW",
+        "category": "hvac",
+        "label": "Set Master Swing",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Sets indoor-unit master swing mode; values depend on brand/model.",
+        "min": 0,
+        "step": 1
+    },
+    {
+        "id": "CSHWRAE",
+        "code": "CSHWRAE",
+        "category": "hvac",
+        "label": "Remote Control Always Enabled",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Controls whether remote control is always enabled for indoor units.",
+        "options": [
+            {
+                "value": 0,
+                "label": "Disabled (0)"
+            },
+            {
+                "value": 1,
+                "label": "Enabled (1)"
+            }
+        ]
+    },
+    {
         "id": "CSHWCHA",
         "code": "CSHWCHA",
         "category": "times",
@@ -325,6 +369,31 @@
         "step": 1
     },
     {
+        "id": "CSHWTHC",
+        "code": "CSHWTHC",
+        "category": "times",
+        "label": "Temporary Override Duration",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 30,
+        "description": "Duration in seconds that temporary override remains active after guest setpoint change.",
+        "min": 0,
+        "max": 86400,
+        "step": 1
+    },
+    {
+        "id": "CSHWMLS",
+        "code": "CSHWMLS",
+        "category": "times",
+        "label": "Empty Time Heating Off",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 86400,
+        "description": "Vacancy duration in seconds between reservations that keeps the gateway in vacant warm state.",
+        "min": 0,
+        "step": 1
+    },
+    {
         "id": "CSHWCIC",
         "code": "CSHWCIC",
         "category": "inputs",
@@ -355,6 +424,19 @@
                 "label": "Inverted cooling inhibit via input 2 (4)"
             }
         ]
+    },
+    {
+        "id": "CSHWRDR",
+        "code": "CSHWRDR",
+        "category": "inputs",
+        "label": "Relay During Reservation",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Bitmask for relay activity during reservation-related states (b0: relay 1, b1: relay 2). Only usable when heater/cooler type is not relay.",
+        "min": 0,
+        "max": 3,
+        "step": 1
     },
     {
         "id": "CSHWTHR",
@@ -408,6 +490,32 @@
         "step": 0.1
     },
     {
+        "id": "CSHWMIT",
+        "code": "CSHWMIT",
+        "category": "thermostat",
+        "label": "Minimum Allowed Room Setpoint",
+        "valueType": "decimal",
+        "required": true,
+        "defaultValue": 15,
+        "description": "Sets the minimum allowed thermostat room setpoint.",
+        "min": 7,
+        "max": 20,
+        "step": 0.1
+    },
+    {
+        "id": "CSHWMXT",
+        "code": "CSHWMXT",
+        "category": "thermostat",
+        "label": "Maximum Allowed Room Setpoint",
+        "valueType": "decimal",
+        "required": true,
+        "defaultValue": 30,
+        "description": "Sets the maximum allowed thermostat room setpoint.",
+        "min": 15,
+        "max": 35,
+        "step": 0.1
+    },
+    {
         "id": "CSHWHYS",
         "code": "CSHWHYS",
         "category": "thermostat",
@@ -417,5 +525,188 @@
         "defaultValue": 2.0,
         "description": "Sets the hysteresis temperature buffer between heating and cooling mode changes.",
         "step": 0.1
+    },
+    {
+        "id": "CSHWPTM",
+        "code": "CSHWPTM",
+        "category": "preconditioning",
+        "label": "Preheating/Precooling Mode",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Bit flags for preheating/precooling behavior (b0..b4).",
+        "min": 0,
+        "max": 31,
+        "step": 1
+    },
+    {
+        "id": "CSHWPHT",
+        "code": "CSHWPHT",
+        "category": "preconditioning",
+        "label": "Preheating Time",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Seconds before reservation start to begin preheating (when CSHWPTM bit 1 is set).",
+        "min": 0,
+        "step": 1
+    },
+    {
+        "id": "CSHWPCT",
+        "code": "CSHWPCT",
+        "category": "preconditioning",
+        "label": "Precooling Time",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Seconds before reservation start to begin precooling (when CSHWPTM bit 3 is set).",
+        "min": 0,
+        "step": 1
+    },
+    {
+        "id": "CSHWATS",
+        "code": "CSHWATS",
+        "category": "preconditioning",
+        "label": "Room Setpoint for Guest Arrival",
+        "valueType": "decimal",
+        "required": true,
+        "defaultValue": 20,
+        "description": "Sets thermostat room setpoint for guest arrival.",
+        "min": 7,
+        "max": 26,
+        "step": 0.1
+    },
+    {
+        "id": "CSHWETS",
+        "code": "CSHWETS",
+        "category": "preconditioning",
+        "label": "Room Setpoint for Vacant Periods",
+        "valueType": "decimal",
+        "required": true,
+        "defaultValue": 16,
+        "description": "Sets thermostat room setpoint when no reservation is active.",
+        "min": 7,
+        "max": 25,
+        "step": 0.1
+    },
+    {
+        "id": "CSHWDHC",
+        "code": "CSHWDHC",
+        "category": "preconditioning",
+        "label": "Room Heat-Up Capacity",
+        "valueType": "decimal",
+        "required": true,
+        "defaultValue": 1,
+        "description": "Room heat-up capacity in °C per hour.",
+        "min": 0,
+        "step": 0.1
+    },
+    {
+        "id": "CSHWDCC",
+        "code": "CSHWDCC",
+        "category": "preconditioning",
+        "label": "Room Cool-Down Capacity",
+        "valueType": "decimal",
+        "required": true,
+        "defaultValue": 1,
+        "description": "Room cool-down capacity in °C per hour.",
+        "min": 0,
+        "step": 0.1
+    },
+    {
+        "id": "CSHWDTN",
+        "code": "CSHWDTN",
+        "category": "nighttime",
+        "label": "Nighttime Temperature Lowering",
+        "valueType": "decimal",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Sets how many °C to lower temperature during the nighttime period.",
+        "min": 0,
+        "max": 5,
+        "step": 0.1
+    },
+    {
+        "id": "CSHWTVN",
+        "code": "CSHWTVN",
+        "category": "nighttime",
+        "label": "Nighttime Time Slot",
+        "valueType": "text",
+        "required": true,
+        "defaultValue": "00000800",
+        "valueFormat": "^(?:[01]\\d|2[0-3])[0-5]\\d(?:[01]\\d|2[0-3])[0-5]\\d$",
+        "description": "Nighttime time slot in hhmmhhmm format (start followed by stop), e.g. 23000700."
+    },
+    {
+        "id": "CSHWCDN",
+        "code": "CSHWCDN",
+        "category": "nighttime",
+        "label": "Cooling During Night",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Enables or disables cooling during the nighttime period.",
+        "options": [
+            {
+                "value": 0,
+                "label": "Disabled (0)"
+            },
+            {
+                "value": 1,
+                "label": "Enabled (1)"
+            }
+        ]
+    },
+    {
+        "id": "CSHWENT",
+        "code": "CSHWENT",
+        "category": "nighttime",
+        "label": "Extended Night Time",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Continues nighttime mode after end time until reservation end or setpoint change.",
+        "options": [
+            {
+                "value": 0,
+                "label": "Disabled (0)"
+            },
+            {
+                "value": 1,
+                "label": "Enabled (1)"
+            }
+        ]
+    },
+    {
+        "id": "CSHWNTR",
+        "code": "CSHWNTR",
+        "category": "nighttime",
+        "label": "Automatic Nighttime Revert",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Enables or disables automatic revert to stored nighttime setpoint after manual changes.",
+        "options": [
+            {
+                "value": 0,
+                "label": "Disabled (0)"
+            },
+            {
+                "value": 1,
+                "label": "Enabled (1)"
+            }
+        ]
+    },
+    {
+        "id": "CSHWNTD",
+        "code": "CSHWNTD",
+        "category": "nighttime",
+        "label": "Nighttime Revert Delay",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 3600,
+        "description": "Delay in seconds before reverting to stored nighttime setpoint when automatic revert is enabled.",
+        "min": 0,
+        "step": 1
     }
 ]

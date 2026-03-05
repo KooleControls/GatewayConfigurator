@@ -9,6 +9,9 @@ export function HvacCategory() {
                 <CommandField command="CSHWCHT" />
                 <CommandField command="CSHWCCT" />
                 <CommandField command="CSHWBOR" />
+                <CommandField command="CSHWCFS" />
+                <CommandField command="CSHWCSW" />
+                <CommandField command="CSHWRAE" />
             </FieldGroup>
             <IndoorUnitsCategory />
         </div>
