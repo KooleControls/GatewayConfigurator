@@ -116,7 +116,10 @@
       "label": "Connected Boiler Type",
       "valueType": "number",
       "features": ["conditions-heating-cooling"],
-      "deprecated": true,
+      "deprecated": {
+        "note": "Replaced by dedicated heater/cooler commands.",
+        "replacedByCommandIds": ["cht", "cct"]
+      },
       "field": {
         "description": "Deprecated. Only active when CSHWCHT and CSHWCCT are both 0.",
         "options": [

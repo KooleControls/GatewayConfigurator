@@ -25,6 +25,7 @@ let state: SettingsState = {
 }
 
 const knownCommandCodes = [...new Set(COMMAND_REGISTRY.commands.map((command) => command.code))]
+const knownCommandCodeSet = new Set(knownCommandCodes)
 
 const listeners = new Set<() => void>()
 
@@ -93,6 +94,26 @@ export function useRawCommands() {
     getRawCommandsSnapshot,
     getRawCommandsSnapshot
   )
+}
+
+export function highlightCommandByCode(commandCode: string) {
+  if (!knownCommandCodeSet.has(commandCode)) {
+    return
+  }
+
+  const nextHighlightTick = state.highlightTick + 1
+
+  state = {
+    ...state,
+    highlightTickByCode: {
+      ...state.highlightTickByCode,
+      [commandCode]: nextHighlightTick,
+    },
+    latestHighlightedCommandCode: commandCode,
+    highlightTick: nextHighlightTick,
+  }
+
+  emitChange()
 }
 
 function getCommandHighlightSnapshot(commandCode: string) {

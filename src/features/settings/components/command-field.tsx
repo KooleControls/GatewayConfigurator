@@ -1,5 +1,7 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -9,8 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { isNumericEntry } from "@/features/settings/config/command-registry"
 import {
+  getCommandEntryById,
+  isNumericEntry,
+} from "@/features/settings/config/command-registry"
+import {
+  highlightCommandByCode,
   useCommandHighlightTick,
   useCommandValue,
 } from "@/features/settings/store/settings-store"
@@ -27,6 +33,19 @@ function CommandField({ command }: CommandFieldProps) {
   const { value, setValue } = useCommandValue(code)
   const highlightTick = useCommandHighlightTick(code)
   const containerRef = useRef<HTMLDivElement>(null)
+  const deprecation =
+    typeof command.deprecated === "object"
+      ? command.deprecated
+      : command.deprecated
+        ? {}
+        : null
+  const replacementCommands = useMemo(
+    () =>
+      (deprecation?.replacedByCommandIds ?? [])
+        .map((commandId) => getCommandEntryById(commandId))
+        .filter((entry) => entry !== undefined),
+    [deprecation?.replacedByCommandIds]
+  )
 
   useEffect(() => {
     if (!highlightTick || !containerRef.current) {
@@ -34,6 +53,7 @@ function CommandField({ command }: CommandFieldProps) {
     }
 
     const element = containerRef.current
+    element.scrollIntoView({ block: "nearest", behavior: "smooth" })
     element.classList.remove("command-flash")
     void element.offsetWidth
     element.classList.add("command-flash")
@@ -54,7 +74,10 @@ function CommandField({ command }: CommandFieldProps) {
       className="space-y-1 rounded-md border border-transparent px-2 py-1"
     >
       <Label htmlFor={code} className="justify-between gap-3">
-        <span>{label}</span>
+        <span className="inline-flex items-center gap-2">
+          <span>{label}</span>
+          {deprecation ? <Badge variant="destructive">Deprecated</Badge> : null}
+        </span>
         <span className="text-muted-foreground">{code}</span>
       </Label>
       {hasOptions ? (
@@ -87,9 +110,28 @@ function CommandField({ command }: CommandFieldProps) {
           {field.description}
         </p>
       ) : null}
-      {command.deprecated ? (
+      {deprecation ? (
         <p className="text-xs/relaxed text-muted-foreground">
-          Deprecated command.
+          <span>
+            {deprecation.note ?? "This command is deprecated."}
+            {replacementCommands.length > 0 ? " Use " : ""}
+          </span>
+          {replacementCommands.map((replacement, index) => (
+            <span key={`${code}-${replacement.id}`}>
+              <Button
+                type="button"
+                variant="link"
+                size="xs"
+                className="h-auto px-0 text-xs/relaxed"
+                onClick={() => highlightCommandByCode(replacement.code)}
+              >
+                {replacement.code}
+              </Button>
+              {index < replacementCommands.length - 2 ? ", " : null}
+              {index === replacementCommands.length - 2 ? " and " : null}
+            </span>
+          ))}
+          {replacementCommands.length > 0 ? <span> instead.</span> : null}
         </p>
       ) : null}
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
   Accordion,
@@ -13,17 +13,124 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
 import { FeatureGroupSection } from "@/features/settings/components/feature-group-section"
+import { COMMAND_REGISTRY } from "@/features/settings/config/command-registry"
+import { getFeatureGroupCommandEntries } from "@/features/settings/config/feature-groups"
 import { FEATURE_GROUPS } from "@/features/settings/config/feature-groups"
 import {
   setRawCommands,
   useLatestHighlightedCommand,
   useRawCommands,
 } from "@/features/settings/store/settings-store"
+import type { CommandRegistryEntry } from "@/features/settings/types"
+import { cn } from "@/lib/utils"
 
-function SettingsFeaturesPanel() {
+type CommandSearchConfig = {
+  searchTerm: string
+  entriesByCode: Map<string, CommandRegistryEntry[]>
+}
+
+function buildCommandSearchText(command: CommandRegistryEntry) {
+  return [command.label, command.description, command.field?.description]
+    .filter((part) => typeof part === "string" && part.length > 0)
+    .join(" ")
+    .toLowerCase()
+}
+
+function commandMatchesSearch(command: CommandRegistryEntry, config: CommandSearchConfig) {
+  if (!config.searchTerm) {
+    return true
+  }
+
+  const code = command.code.toLowerCase()
+  if (code === config.searchTerm || code.includes(config.searchTerm)) {
+    return true
+  }
+
+  const searchableText = buildCommandSearchText(command)
+  return searchableText.includes(config.searchTerm)
+}
+
+type SettingsFeaturesPanelProps = {
+  searchQuery: string
+  onSearchQueryChange: (nextQuery: string) => void
+}
+
+function SettingsFeaturesPanel({
+  searchQuery,
+  onSearchQueryChange,
+}: SettingsFeaturesPanelProps) {
+  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>([])
+  const normalizedSearchTerm = searchQuery.trim().toLowerCase()
+
+  const entriesByCode = useMemo(() => {
+    const groupedEntries = new Map<string, CommandRegistryEntry[]>()
+
+    for (const command of COMMAND_REGISTRY.commands) {
+      const commandCode = command.code
+      const existingEntries = groupedEntries.get(commandCode)
+
+      if (existingEntries) {
+        existingEntries.push(command)
+      } else {
+        groupedEntries.set(commandCode, [command])
+      }
+    }
+
+    return groupedEntries
+  }, [])
+
+  const searchConfig = useMemo(
+    () => ({ searchTerm: normalizedSearchTerm, entriesByCode }),
+    [entriesByCode, normalizedSearchTerm]
+  )
+
+  const matchedCommandsByGroupId = useMemo(
+    () =>
+      Object.fromEntries(
+        FEATURE_GROUPS.map((group) => {
+          const groupCommands = getFeatureGroupCommandEntries(group.id)
+          const matchingCommands = groupCommands.filter((command) =>
+            commandMatchesSearch(command, searchConfig)
+          )
+
+          return [group.id, matchingCommands]
+        })
+      ) as Record<string, CommandRegistryEntry[]>,
+    [searchConfig]
+  )
+
+  const groupsWithMatches = useMemo(
+    () =>
+      FEATURE_GROUPS.filter(
+        (group) => (matchedCommandsByGroupId[group.id]?.length ?? 0) > 0
+      ),
+    [matchedCommandsByGroupId]
+  )
+
+  useEffect(() => {
+    if (!normalizedSearchTerm) {
+      return
+    }
+
+    const nextOpenItems = groupsWithMatches.map((group) => group.id)
+
+    setOpenAccordionItems((currentOpenItems) => {
+      if (
+        currentOpenItems.length === nextOpenItems.length &&
+        currentOpenItems.every((value, index) => value === nextOpenItems[index])
+      ) {
+        return currentOpenItems
+      }
+
+      return nextOpenItems
+    })
+  }, [groupsWithMatches, normalizedSearchTerm])
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -33,14 +140,43 @@ function SettingsFeaturesPanel() {
         </CardDescription>
       </CardHeader>
       <CardContent className="min-h-0 flex-1 overflow-y-auto pr-2">
-        <Accordion type="multiple" className="space-y-3">
+        <div className="mb-3">
+          <Label htmlFor="command-search">Search commands</Label>
+          <Input
+            id="command-search"
+            value={searchQuery}
+            onChange={(event) => onSearchQueryChange(event.target.value)}
+            placeholder="Search by command code or description"
+            className="mt-1"
+          />
+        </div>
+        <Accordion
+          type="multiple"
+          value={openAccordionItems}
+          onValueChange={setOpenAccordionItems}
+          className="space-y-3"
+        >
           {FEATURE_GROUPS.map((group) => (
             <AccordionItem key={group.id} value={group.id}>
-              <AccordionTrigger>{group.title}</AccordionTrigger>
+              <AccordionTrigger>
+                <span className="inline-flex items-center gap-2">
+                  <span>{group.title}</span>
+                  {normalizedSearchTerm ? (
+                    <Badge variant="outline">
+                      {matchedCommandsByGroupId[group.id]?.length ?? 0}
+                    </Badge>
+                  ) : null}
+                </span>
+              </AccordionTrigger>
               <AccordionContent className="px-3 pt-2 pb-3">
                 <FeatureGroupSection
                   groupId={group.id}
                   description={group.description}
+                  visibleCommands={
+                    normalizedSearchTerm
+                      ? matchedCommandsByGroupId[group.id] ?? []
+                      : undefined
+                  }
                 />
               </AccordionContent>
             </AccordionItem>
@@ -51,15 +187,72 @@ function SettingsFeaturesPanel() {
   )
 }
 
-function RawCommandsPanel() {
+type RawCommandsPanelProps = {
+  searchQuery: string
+}
+
+function RawCommandsPanel({ searchQuery }: RawCommandsPanelProps) {
   const commandsText = useRawCommands()
   const { commandCode, tick } = useLatestHighlightedCommand()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [scrollTop, setScrollTop] = useState(0)
   const [lineFlash, setLineFlash] = useState<{
     top: number
     height: number
     key: string
   } | null>(null)
+  const normalizedSearchTerm = searchQuery.trim().toLowerCase()
+
+  const entriesByCode = useMemo(() => {
+    const groupedEntries = new Map<string, CommandRegistryEntry[]>()
+
+    for (const command of COMMAND_REGISTRY.commands) {
+      const commandCode = command.code
+      const existingEntries = groupedEntries.get(commandCode)
+
+      if (existingEntries) {
+        existingEntries.push(command)
+      } else {
+        groupedEntries.set(commandCode, [command])
+      }
+    }
+
+    return groupedEntries
+  }, [])
+
+  const knownCommandCodesDesc = useMemo(
+    () => [...entriesByCode.keys()].sort((left, right) => right.length - left.length),
+    [entriesByCode]
+  )
+
+  const searchConfig = useMemo(
+    () => ({ searchTerm: normalizedSearchTerm, entriesByCode }),
+    [entriesByCode, normalizedSearchTerm]
+  )
+
+  const lineMatchStates = useMemo(() => {
+    const lines = commandsText.split(/\r?\n/)
+
+    return lines.map((line) => {
+      if (!searchConfig.searchTerm) {
+        return true
+      }
+
+      const trimmedLine = line.trimStart()
+      const commandCode = knownCommandCodesDesc.find((knownCode) =>
+        trimmedLine.startsWith(knownCode)
+      )
+
+      if (!commandCode) {
+        return trimmedLine.toLowerCase().includes(searchConfig.searchTerm)
+      }
+
+      const commandEntries = searchConfig.entriesByCode.get(commandCode) ?? []
+      return commandEntries.some((commandEntry) =>
+        commandMatchesSearch(commandEntry, searchConfig)
+      )
+    })
+  }, [commandsText, knownCommandCodesDesc, searchConfig])
 
   useEffect(() => {
     if (!tick || !textareaRef.current) {
@@ -138,9 +331,30 @@ function RawCommandsPanel() {
               ref={textareaRef}
               id="raw-commands"
               value={commandsText}
-              className="min-h-0 flex-1 font-mono"
+              className={cn(
+                "relative z-20 min-h-0 flex-1 bg-transparent font-mono caret-foreground selection:bg-accent/40",
+                normalizedSearchTerm ? "text-transparent" : "text-foreground"
+              )}
+              onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
               onChange={(event) => setRawCommands(event.target.value)}
             />
+            {normalizedSearchTerm ? (
+              <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-md px-2 py-2">
+                <div
+                  className="font-mono text-sm leading-6 md:text-xs/relaxed"
+                  style={{ transform: `translateY(-${scrollTop}px)` }}
+                >
+                  {commandsText.split(/\r?\n/).map((line, lineIndex) => (
+                    <div
+                      key={`${lineIndex}-${line}`}
+                      className={lineMatchStates[lineIndex] ? "text-foreground" : "text-muted-foreground"}
+                    >
+                      {line || "\u00A0"}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </CardContent>
@@ -148,4 +362,18 @@ function RawCommandsPanel() {
   )
 }
 
-export { RawCommandsPanel, SettingsFeaturesPanel }
+function SettingsCard() {
+  const [searchQuery, setSearchQuery] = useState("")
+
+  return (
+    <>
+      <SettingsFeaturesPanel
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+      />
+      <RawCommandsPanel searchQuery={searchQuery} />
+    </>
+  )
+}
+
+export { RawCommandsPanel, SettingsCard, SettingsFeaturesPanel }

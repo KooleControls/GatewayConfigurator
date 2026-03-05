@@ -19,9 +19,14 @@ export type CommandDefinition = {
   valueType?: CommandValueType
 }
 
+export type CommandDeprecation = {
+  note?: string
+  replacedByCommandIds?: string[]
+}
+
 export type CommandRegistryEntry = CommandDefinition & {
   features?: string[]
-  deprecated?: boolean
+  deprecated?: boolean | CommandDeprecation
   field?: CommandFieldConfig
 }
 

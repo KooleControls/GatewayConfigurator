@@ -1,3 +1,5 @@
-# React + TypeScript + Vite + shadcn/ui
+# Gateway Configurator
 
-This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
+GitHub Pages: https://koolecontrols.github.io/GatewayConfigurator/
+
+Repository: https://github.com/KooleControls/GatewayConfigurator
