@@ -32,6 +32,12 @@ const indoorUnitsSearchText = [
     "cshwmodiuadb",
 ].join(" ");
 
+const indoorUnitCommandKeys = new Set([
+    "CSHWMODIUCLEAR",
+    "CSHWMODIUADD",
+    "CSHWMODIUADB",
+]);
+
 function normalizeQuery(query: string) {
     return query.trim().toLowerCase();
 }
@@ -91,4 +97,18 @@ export function getMatchingAccordionSections(query: string) {
     }
 
     return [...sections];
+}
+
+export function getAccordionSectionForCommand(commandKey: string) {
+    if (indoorUnitCommandKeys.has(commandKey)) {
+        return "hvac";
+    }
+
+    const definition = registryByCode.get(commandKey);
+
+    if (!definition) {
+        return null;
+    }
+
+    return mapCategoryToSection(definition.category);
 }

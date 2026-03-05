@@ -68,9 +68,10 @@ function sanitizeValue(value: string, valueType: RegistryValueType) {
 }
 
 export function CommandField({ command, searchQuery = "" }: CommandFieldProps) {
-    const { commands, lastChange } = useCommandsStore();
+    const { commands, hoveredCommand, lastChange } = useCommandsStore();
     const [isFlashing, setIsFlashing] = useState(false);
     const definition = registry.find((entry) => entry.code === command);
+    const isHoveredFromList = hoveredCommand === command;
 
     useEffect(() => {
         const shouldFlash =
@@ -124,7 +125,19 @@ export function CommandField({ command, searchQuery = "" }: CommandFieldProps) {
     };
 
     return (
-        <Field className={cn("h-full gap-1.5", isFlashing && "command-flash")}>
+        <Field
+            className={cn(
+                "h-full gap-1.5  p-2",
+                isFlashing && "command-flash",
+                isHoveredFromList && "bg-primary/10 ring-1 ring-primary/50",
+            )}
+            onMouseEnter={() => {
+                commandsStore.setHoveredCommand(command);
+            }}
+            onMouseLeave={() => {
+                commandsStore.setHoveredCommand(null);
+            }}
+        >
             <div className="flex-1 min-h-0 space-y-0.5">
                 <FieldTitle className="flex w-full items-start justify-between text-sm leading-tight">
                     <span>{definition.label}</span>

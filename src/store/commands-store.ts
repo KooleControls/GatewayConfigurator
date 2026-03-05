@@ -16,9 +16,10 @@ export type IndoorUnitEntry = {
 type CommandsState = {
     commandText: string;
     commands: CommandEntry[];
+    hoveredCommand: string | null;
     lastChange: {
         id: number;
-        source: "field" | "text";
+        source: "field" | "text" | "field-click";
         commandKeys: string[];
         textLine: number | null;
     } | null;
@@ -134,12 +135,17 @@ export function serializeCommands(commands: CommandEntry[]): string {
 let state: CommandsState = {
     commandText: commandLines.join("\n"),
     commands: commandLines.map(parseCommand),
+    hoveredCommand: null,
     lastChange: null,
 };
 
 let changeId = 0;
 
-function createChange(source: "field" | "text", commandKeys: string[], textLine: number | null) {
+function createChange(
+    source: "field" | "text" | "field-click",
+    commandKeys: string[],
+    textLine: number | null,
+) {
     return {
         id: ++changeId,
         source,
@@ -252,6 +258,28 @@ export const commandsStore = {
                 changedCommandKeys,
                 editedLine ?? getTextLineForCommand(commands, primaryCommand),
             ),
+        };
+        notify();
+    },
+    flashCommandLine(command: string) {
+        state = {
+            ...state,
+            lastChange: createChange(
+                "field-click",
+                [command],
+                getTextLineForCommand(state.commands, command),
+            ),
+        };
+        notify();
+    },
+    setHoveredCommand(command: string | null) {
+        if (state.hoveredCommand === command) {
+            return;
+        }
+
+        state = {
+            ...state,
+            hoveredCommand: command,
         };
         notify();
     },

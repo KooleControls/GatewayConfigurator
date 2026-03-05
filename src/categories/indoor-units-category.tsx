@@ -36,8 +36,9 @@ type IndoorUnitsCategoryProps = {
 };
 
 export function IndoorUnitsCategory({ searchQuery = "" }: IndoorUnitsCategoryProps) {
-    const { commands, lastChange } = useCommandsStore();
+    const { commands, hoveredCommand, lastChange } = useCommandsStore();
     const [isFlashing, setIsFlashing] = useState(false);
+    const isHoveredFromList = hoveredCommand ? indoorUnitFlashCommands.has(hoveredCommand) : false;
 
     const normalizedSearch = searchQuery.trim().toLowerCase();
     const isSearchMatch =
@@ -78,7 +79,19 @@ export function IndoorUnitsCategory({ searchQuery = "" }: IndoorUnitsCategoryPro
 
     return (
         <FieldGroup className="gap-3 px-2 pb-4">
-            <Field className={cn("gap-2", isFlashing && "command-flash")}>
+            <Field
+                className={cn(
+                    "gap-2",
+                    isFlashing && "command-flash",
+                    isHoveredFromList && "bg-primary/10 ring-1 ring-primary/50",
+                )}
+                onMouseEnter={() => {
+                    commandsStore.setHoveredCommand("CSHWMODIUCLEAR");
+                }}
+                onMouseLeave={() => {
+                    commandsStore.setHoveredCommand(null);
+                }}
+            >
                 <FieldTitle className="text-sm">Indoor Units</FieldTitle>
                 <FieldDescription>
                     Raw commands always keep order: CSHWMODIUCLEAR, then each indoor-unit add command.

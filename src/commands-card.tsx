@@ -31,9 +31,27 @@ function parseCommandKey(line: string) {
     return command;
 }
 
+function getHoveredCommandFromMouseEvent(
+    event: React.MouseEvent<HTMLTextAreaElement>,
+    text: string,
+    layout: TextareaLayout,
+) {
+    const textareaRect = event.currentTarget.getBoundingClientRect();
+    const yInTextarea = event.clientY - textareaRect.top;
+    const lineIndex = Math.floor((yInTextarea + layout.scrollTop - layout.paddingTop) / layout.lineHeight);
+    const lines = text.split(/\r?\n/);
+
+    if (lineIndex < 0 || lineIndex >= lines.length) {
+        return null;
+    }
+
+    const commandKey = parseCommandKey(lines[lineIndex].trim());
+    return commandKey || null;
+}
+
 export function CommandsCard({ searchQuery = "" }: { searchQuery?: string })
 {
-    const { commandText, lastChange } = useCommandsStore();
+    const { commandText, commands, hoveredCommand, lastChange } = useCommandsStore();
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const [lineFlash, setLineFlash] = useState<LineFlash | null>(null);
     const [overlayMetrics, setOverlayMetrics] = useState<OverlayMetrics | null>(null);
@@ -63,6 +81,15 @@ export function CommandsCard({ searchQuery = "" }: { searchQuery?: string })
             })
             .filter((index): index is number => index !== null);
     }, [commandText, searchQuery]);
+
+    const hoveredLine = useMemo(() => {
+        if (!hoveredCommand) {
+            return null;
+        }
+
+        const line = commands.findIndex((entry) => entry.command === hoveredCommand);
+        return line >= 0 ? line : null;
+    }, [commands, hoveredCommand]);
 
     const updateTextareaLayout = () => {
         const textarea = textareaRef.current;
@@ -112,7 +139,11 @@ export function CommandsCard({ searchQuery = "" }: { searchQuery?: string })
     }, []);
 
     useEffect(() => {
-        if (!lastChange || lastChange.textLine === null) {
+        if (
+            !lastChange ||
+            lastChange.textLine === null ||
+            lastChange.source === "field"
+        ) {
             return;
         }
 
@@ -152,6 +183,15 @@ export function CommandsCard({ searchQuery = "" }: { searchQuery?: string })
                             }}
                         />
                     ) : null}
+                    {hoveredLine !== null ? (
+                        <div
+                            className="pointer-events-none absolute inset-x-2 z-[18] rounded-sm bg-primary/20"
+                            style={{
+                                top: `${textareaLayout.paddingTop + hoveredLine * textareaLayout.lineHeight - textareaLayout.scrollTop}px`,
+                                height: `${textareaLayout.lineHeight}px`,
+                            }}
+                        />
+                    ) : null}
                     {unmatchedLineIndexes.map((lineIndex) => (
                         <div
                             key={lineIndex}
@@ -180,6 +220,17 @@ export function CommandsCard({ searchQuery = "" }: { searchQuery?: string })
                         }
 
                         updateOverlayMetrics(lineFlash.line);
+                    }}
+                    onMouseMove={(event) => {
+                        const commandKey = getHoveredCommandFromMouseEvent(
+                            event,
+                            commandText,
+                            textareaLayout,
+                        );
+                        commandsStore.setHoveredCommand(commandKey);
+                    }}
+                    onMouseLeave={() => {
+                        commandsStore.setHoveredCommand(null);
                     }}
                     className="relative z-10 h-full min-h-0 overflow-auto"
                 />
