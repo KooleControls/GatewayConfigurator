@@ -126,5 +126,296 @@
         "deprecated": true,
         "description": "Reads legacy indoor-unit configuration list.",
         "deprecatedMessage": "Deprecated legacy command. Legacy indoor-unit commands take precedence over CSHWHVAC. Use CSHWHVAC and DSHWHVAC instead."
+    },
+    {
+        "id": "CSHWCHT",
+        "code": "CSHWCHT",
+        "category": "hvac",
+        "label": "Connected Heater Type",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Sets the connected heater type.",
+        "options": [
+            {
+                "value": 0,
+                "label": "NA (0)"
+            },
+            {
+                "value": 1,
+                "label": "OTH - Opentherm (1)"
+            },
+            {
+                "value": 2,
+                "label": "REL - Relais on/off (2)"
+            },
+            {
+                "value": 3,
+                "label": "SAM - Samsung via Intesis (3, Deprecated)"
+            },
+            {
+                "value": 4,
+                "label": "DAI - Daikin RTD-NET Modbus RTU (4)"
+            },
+            {
+                "value": 5,
+                "label": "CMN - Cool Master Net (5)"
+            },
+            {
+                "value": 6,
+                "label": "CMA - Cool Master Net for Aedes (6)"
+            },
+            {
+                "value": 7,
+                "label": "MIT - Mitsubishi via Intesis RTU (7)"
+            },
+            {
+                "value": 8,
+                "label": "COP - Coolplug via Modbus RTU (8)"
+            }
+        ]
+    },
+    {
+        "id": "CSHWCCT",
+        "code": "CSHWCCT",
+        "category": "hvac",
+        "label": "Connected Cooler Type",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Sets the connected cooler type.",
+        "options": [
+            {
+                "value": 0,
+                "label": "NA (0)"
+            },
+            {
+                "value": 1,
+                "label": "OTH - Opentherm (1)"
+            },
+            {
+                "value": 2,
+                "label": "REL - Relais on/off (2)"
+            },
+            {
+                "value": 3,
+                "label": "SAM - Samsung via Intesis (3, Deprecated)"
+            },
+            {
+                "value": 4,
+                "label": "DAI - Daikin RTD-NET Modbus RTU (4)"
+            },
+            {
+                "value": 5,
+                "label": "CMN - Cool Master Net (5)"
+            },
+            {
+                "value": 6,
+                "label": "CMA - Cool Master Net for Aedes (6)"
+            },
+            {
+                "value": 7,
+                "label": "MIT - Mitsubishi via Intesis RTU (7)"
+            },
+            {
+                "value": 8,
+                "label": "COP - Coolplug via Modbus RTU (8)"
+            }
+        ]
+    },
+    {
+        "id": "CSHWBOR",
+        "code": "CSHWBOR",
+        "category": "hvac",
+        "label": "Connected Boiler Type",
+        "valueType": "number",
+        "deprecated": true,
+        "defaultValue": 0,
+        "description": "Deprecated: active only when CSHWCHT and CSHWCCT are both 0. Supports Opentherm (1) and Relais (2).",
+        "deprecatedMessage": "Deprecated command. Sets both heater and cooler types via BOR when both CSHWCHT and CSHWCCT are 0.",
+        "options": [
+            {
+                "value": 0,
+                "label": "NA (0)"
+            },
+            {
+                "value": 1,
+                "label": "OTH - Opentherm (1)"
+            },
+            {
+                "value": 2,
+                "label": "REL - Relais on/off (2)"
+            }
+        ]
+    },
+    {
+        "id": "CSHWCHA",
+        "code": "CSHWCHA",
+        "category": "times",
+        "label": "Minimum On Time for Heating",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Sets the minimum time the heater must stay on before turning off.",
+        "min": 0,
+        "max": 86400,
+        "step": 1
+    },
+    {
+        "id": "CSHWCHU",
+        "code": "CSHWCHU",
+        "category": "times",
+        "label": "Minimum Off Time for Heating",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Sets the minimum time the heater must stay off before turning on.",
+        "min": 0,
+        "max": 86400,
+        "step": 1
+    },
+    {
+        "id": "CSHWCCA",
+        "code": "CSHWCCA",
+        "category": "times",
+        "label": "Minimum On Time for Cooling",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Sets the minimum time the cooler must stay on before turning off.",
+        "min": 0,
+        "max": 86400,
+        "step": 1
+    },
+    {
+        "id": "CSHWCCU",
+        "code": "CSHWCCU",
+        "category": "times",
+        "label": "Minimum Off Time for Cooling",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Sets the minimum time the cooler must stay off before turning on.",
+        "min": 0,
+        "max": 86400,
+        "step": 1
+    },
+    {
+        "id": "CSHWCTT",
+        "code": "CSHWCTT",
+        "category": "times",
+        "label": "Cooling to Heating Timeout",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 60,
+        "description": "Sets the minimum timeout when switching from cooling to heating.",
+        "min": 0,
+        "step": 1
+    },
+    {
+        "id": "CSHWHCT",
+        "code": "CSHWHCT",
+        "category": "times",
+        "label": "Heating to Cooling Timeout",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 60,
+        "description": "Sets the minimum timeout when switching from heating to cooling.",
+        "min": 0,
+        "step": 1
+    },
+    {
+        "id": "CSHWCIC",
+        "code": "CSHWCIC",
+        "category": "inputs",
+        "label": "Cooling Inhibit Configuration",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Configures cooling inhibit behavior based on external inputs.",
+        "options": [
+            {
+                "value": 0,
+                "label": "No cooling inhibit (0)"
+            },
+            {
+                "value": 1,
+                "label": "Cooling inhibit via input 1 (1)"
+            },
+            {
+                "value": 2,
+                "label": "Cooling inhibit via input 2 (2)"
+            },
+            {
+                "value": 3,
+                "label": "Inverted cooling inhibit via input 1 (3)"
+            },
+            {
+                "value": 4,
+                "label": "Inverted cooling inhibit via input 2 (4)"
+            }
+        ]
+    },
+    {
+        "id": "CSHWTHR",
+        "code": "CSHWTHR",
+        "category": "thermostat",
+        "label": "Connected Thermostat Type",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 0,
+        "description": "Sets the type of the connected thermostat.",
+        "options": [
+            {
+                "value": 0,
+                "label": "NA - Not available (0)"
+            },
+            {
+                "value": 1,
+                "label": "OTH - Opentherm (1)"
+            }
+        ]
+    },
+    {
+        "id": "CSHWSCC",
+        "code": "CSHWSCC",
+        "category": "thermostat",
+        "label": "Cooling Support Enabled",
+        "valueType": "number",
+        "required": true,
+        "defaultValue": 1,
+        "description": "Enables or disables support for the cooling system.",
+        "options": [
+            {
+                "value": 0,
+                "label": "Disabled (0)"
+            },
+            {
+                "value": 1,
+                "label": "Enabled (1)"
+            }
+        ]
+    },
+    {
+        "id": "CSHWMCT",
+        "code": "CSHWMCT",
+        "category": "thermostat",
+        "label": "Minimum Cooling Temperature",
+        "valueType": "decimal",
+        "required": true,
+        "defaultValue": 21,
+        "description": "Sets the minimum temperature threshold before cooling can activate.",
+        "step": 0.1
+    },
+    {
+        "id": "CSHWHYS",
+        "code": "CSHWHYS",
+        "category": "thermostat",
+        "label": "Heating/Cooling Hysteresis",
+        "valueType": "decimal",
+        "required": true,
+        "defaultValue": 2.0,
+        "description": "Sets the hysteresis temperature buffer between heating and cooling mode changes.",
+        "step": 0.1
     }
 ]

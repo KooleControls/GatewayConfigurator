@@ -22,7 +22,7 @@ type CommandFieldProps = {
     command: string;
 };
 
-type RegistryValueType = "text" | "number";
+type RegistryValueType = "text" | "number" | "decimal";
 
 type CommandDefinition = {
     id: string;
@@ -47,6 +47,19 @@ const registry = commandsRegistry as CommandDefinition[];
 function sanitizeValue(value: string, valueType: RegistryValueType) {
     if (valueType === "number") {
         return value.replace(/\D/g, "");
+    }
+
+    if (valueType === "decimal") {
+        const sanitized = value.replace(/[^\d.]/g, "");
+        const firstDot = sanitized.indexOf(".");
+
+        if (firstDot < 0) {
+            return sanitized;
+        }
+
+        return `${sanitized.slice(0, firstDot + 1)}${sanitized
+            .slice(firstDot + 1)
+            .replace(/\./g, "")}`;
     }
 
     return value;
@@ -84,7 +97,7 @@ export function CommandField({ command }: CommandFieldProps) {
     }
 
     const value = commands.find((entry) => entry.command === command)?.value ?? "";
-    const inputType = definition.valueType;
+    const inputType = definition.valueType === "decimal" ? "number" : definition.valueType;
     const placeholder =
         definition.defaultValue !== undefined
             ? String(definition.defaultValue)

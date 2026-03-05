@@ -5,6 +5,14 @@ export type CommandEntry = {
     value: string;
 };
 
+export type IndoorUnitCommand = "CSHWMODIUADD" | "CSHWMODIUADB";
+
+export type IndoorUnitEntry = {
+    command: IndoorUnitCommand;
+    address: string;
+    isMaster: boolean;
+};
+
 type CommandsState = {
     commandText: string;
     commands: CommandEntry[];
@@ -57,6 +65,15 @@ const commandLines = [
     "CSHWMODIUADB320;1",
 ];
 
+const INDOOR_UNITS_CLEAR_COMMAND = "CSHWMODIUCLEAR";
+const INDOOR_UNITS_ADD_COMMAND = "CSHWMODIUADD";
+const INDOOR_UNITS_ADB_COMMAND = "CSHWMODIUADB";
+const indoorUnitManagedCommands = new Set<string>([
+    INDOOR_UNITS_CLEAR_COMMAND,
+    INDOOR_UNITS_ADD_COMMAND,
+    INDOOR_UNITS_ADB_COMMAND,
+]);
+
 function parseCommand(line: string): CommandEntry {
     const [, command = line, value = ""] = line.match(/^([A-Z]+)(.*)$/) ?? [];
     return { command, value };
@@ -70,12 +87,35 @@ function parseCommandsText(text: string): CommandEntry[] {
         .map(parseCommand);
 }
 
-function getChangedCommandKeys(previous: CommandEntry[], next: CommandEntry[]): string[] {
-    const previousMap = new Map(previous.map((entry) => [entry.command, entry.value]));
-    const nextMap = new Map(next.map((entry) => [entry.command, entry.value]));
-    const commandKeys = new Set([...previousMap.keys(), ...nextMap.keys()]);
+function parseIndoorUnitValue(value: string) {
+    const [rawAddress = "", rawRole = ""] = value.split(";");
 
-    return [...commandKeys].filter((commandKey) => previousMap.get(commandKey) !== nextMap.get(commandKey));
+    return {
+        address: rawAddress,
+        isMaster: rawRole === "1",
+    };
+}
+
+function getChangedCommandKeys(previous: CommandEntry[], next: CommandEntry[]): string[] {
+    const commandKeys = new Set([
+        ...previous.map((entry) => entry.command),
+        ...next.map((entry) => entry.command),
+    ]);
+
+    return [...commandKeys].filter((commandKey) => {
+        const previousValues = previous
+            .filter((entry) => entry.command === commandKey)
+            .map((entry) => entry.value);
+        const nextValues = next
+            .filter((entry) => entry.command === commandKey)
+            .map((entry) => entry.value);
+
+        if (previousValues.length !== nextValues.length) {
+            return true;
+        }
+
+        return previousValues.some((value, index) => value !== nextValues[index]);
+    });
 }
 
 function getTextLineForCommand(commands: CommandEntry[], commandKey: string | undefined): number | null {
@@ -144,6 +184,57 @@ export const commandsStore = {
             commands,
             commandText: serializeCommands(commands),
             lastChange: createChange("field", [command], getTextLineForCommand(commands, command)),
+        };
+        notify();
+    },
+    getIndoorUnitEntries(commands = state.commands): IndoorUnitEntry[] {
+        return commands
+            .filter(
+                (entry): entry is CommandEntry & { command: IndoorUnitCommand } =>
+                    entry.command === INDOOR_UNITS_ADD_COMMAND ||
+                    entry.command === INDOOR_UNITS_ADB_COMMAND,
+            )
+            .map((entry) => {
+                const parsedValue = parseIndoorUnitValue(entry.value);
+
+                return {
+                    command: entry.command,
+                    address: parsedValue.address,
+                    isMaster: parsedValue.isMaster,
+                };
+            });
+    },
+    setIndoorUnitEntries(entries: IndoorUnitEntry[]) {
+        const existingCommands = state.commands;
+        const firstIndoorIndex = existingCommands.findIndex((entry) =>
+            indoorUnitManagedCommands.has(entry.command),
+        );
+        const insertionIndex = firstIndoorIndex >= 0 ? firstIndoorIndex : existingCommands.length;
+
+        const baseCommands = existingCommands.filter(
+            (entry) => !indoorUnitManagedCommands.has(entry.command),
+        );
+        const before = baseCommands.slice(0, insertionIndex);
+        const after = baseCommands.slice(insertionIndex);
+        const indoorUnitCommands: CommandEntry[] = [
+            { command: INDOOR_UNITS_CLEAR_COMMAND, value: "" },
+            ...entries.map((entry) => ({
+                command: entry.command,
+                value: `${entry.address};${entry.isMaster ? 1 : 0}`,
+            })),
+        ];
+        const commands = [...before, ...indoorUnitCommands, ...after];
+        const changedCommandKeys = getChangedCommandKeys(state.commands, commands);
+
+        state = {
+            ...state,
+            commands,
+            commandText: serializeCommands(commands),
+            lastChange: createChange(
+                "field",
+                changedCommandKeys,
+                getTextLineForCommand(commands, INDOOR_UNITS_CLEAR_COMMAND),
+            ),
         };
         notify();
     },
