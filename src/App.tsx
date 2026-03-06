@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { CommandsCard } from "./commands-card";
+import { ExamplesCard } from "./examples-card";
 import { SettingsCard } from "./settings-card";
 
 export function App() {
@@ -19,8 +20,11 @@ export function App() {
 				<div className="min-h-0">
 					<SettingsCard searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />
 				</div>
-				<div className="min-h-0">
+				<div className="min-h-0 flex flex-col gap-3">
+					<ExamplesCard />
+					<div className="min-h-0 flex-1">
 					<CommandsCard searchQuery={searchQuery} />
+					</div>
 				</div>
 			</div>
 
