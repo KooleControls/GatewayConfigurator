@@ -13,6 +13,16 @@ export type IndoorUnitEntry = {
     isMaster: boolean;
 };
 
+export type HvacUnitEntry = {
+    id: number;
+    type: number;
+    address: string;
+    master: boolean;
+    heating: boolean;
+    cooling: boolean;
+    allowConflictingMode: boolean;
+};
+
 type CommandsState = {
     commandText: string;
     commands: CommandEntry[];
@@ -48,7 +58,6 @@ const commandLines = [
     "CSHWTHR0",
     "CSHWSCC1",
     "CSHWMLS86400",
-    "CSHWBOR0",
     "CSHWCHT6",
     "CSHWCCT6",
     "CSHWCTT10",
@@ -70,6 +79,54 @@ const INDOOR_UNITS_CLEAR_COMMAND = "CSHWMODIUCLEAR";
 const INDOOR_UNITS_ADD_COMMAND = "CSHWMODIUADD";
 const INDOOR_UNITS_ADB_COMMAND = "CSHWMODIUADB";
 const indoorUnitManagedCommands = new Set<string>([
+    INDOOR_UNITS_CLEAR_COMMAND,
+    INDOOR_UNITS_ADD_COMMAND,
+    INDOOR_UNITS_ADB_COMMAND,
+]);
+
+const HVAC_UNIT_COMMAND = "CSHWHVAC";
+
+const HVAC_FLAG_MASTER = 0x01;
+const HVAC_FLAG_HEATING = 0x02;
+const HVAC_FLAG_COOLING = 0x04;
+const HVAC_FLAG_ALLOW_CONFLICTING = 0x08;
+
+function parseHvacUnitValue(value: string): HvacUnitEntry | null {
+    const parts = value.split(";");
+    if (parts.length !== 4) return null;
+
+    const id = parseInt(parts[0], 10);
+    const type = parseInt(parts[1], 10);
+    const address = parts[2];
+    const flags = parseInt(parts[3], 10);
+
+    if (isNaN(id) || isNaN(type) || isNaN(flags)) return null;
+
+    return {
+        id,
+        type,
+        address,
+        master: (flags & HVAC_FLAG_MASTER) !== 0,
+        heating: (flags & HVAC_FLAG_HEATING) !== 0,
+        cooling: (flags & HVAC_FLAG_COOLING) !== 0,
+        allowConflictingMode: (flags & HVAC_FLAG_ALLOW_CONFLICTING) !== 0,
+    };
+}
+
+function serializeHvacUnitEntry(entry: HvacUnitEntry): string {
+    let flags = 0;
+    if (entry.master) flags |= HVAC_FLAG_MASTER;
+    if (entry.heating) flags |= HVAC_FLAG_HEATING;
+    if (entry.cooling) flags |= HVAC_FLAG_COOLING;
+    if (entry.allowConflictingMode) flags |= HVAC_FLAG_ALLOW_CONFLICTING;
+
+    return `${entry.id};${entry.type};${entry.address};${flags}`;
+}
+
+const legacyHvacCommands = new Set<string>([
+    "CSHWCHT",
+    "CSHWCCT",
+    "CSHWBOR",
     INDOOR_UNITS_CLEAR_COMMAND,
     INDOOR_UNITS_ADD_COMMAND,
     INDOOR_UNITS_ADB_COMMAND,
@@ -240,6 +297,107 @@ export const commandsStore = {
                 "field",
                 changedCommandKeys,
                 getTextLineForCommand(commands, INDOOR_UNITS_CLEAR_COMMAND),
+            ),
+        };
+        notify();
+    },
+    getHvacUnitEntries(commands = state.commands): HvacUnitEntry[] {
+        return commands
+            .filter((entry) => entry.command === HVAC_UNIT_COMMAND)
+            .map((entry) => parseHvacUnitValue(entry.value))
+            .filter((entry): entry is HvacUnitEntry => entry !== null);
+    },
+    setHvacUnitEntries(entries: HvacUnitEntry[]) {
+        const existingCommands = state.commands;
+        const firstHvacIndex = existingCommands.findIndex(
+            (entry) => entry.command === HVAC_UNIT_COMMAND,
+        );
+        const insertionIndex = firstHvacIndex >= 0 ? firstHvacIndex : existingCommands.length;
+
+        const baseCommands = existingCommands.filter(
+            (entry) => entry.command !== HVAC_UNIT_COMMAND,
+        );
+        const before = baseCommands.slice(0, insertionIndex);
+        const after = baseCommands.slice(insertionIndex);
+        const hvacCommands: CommandEntry[] = entries.map((entry) => ({
+            command: HVAC_UNIT_COMMAND,
+            value: serializeHvacUnitEntry(entry),
+        }));
+        const commands = [...before, ...hvacCommands, ...after];
+        const changedCommandKeys = getChangedCommandKeys(state.commands, commands);
+
+        state = {
+            ...state,
+            commands,
+            commandText: serializeCommands(commands),
+            lastChange: createChange(
+                "field",
+                changedCommandKeys,
+                getTextLineForCommand(commands, HVAC_UNIT_COMMAND),
+            ),
+        };
+        notify();
+    },
+    hasLegacyHvacCommands(commands = state.commands): boolean {
+        return commands.some((entry) => legacyHvacCommands.has(entry.command));
+    },
+    hasNewHvacCommands(commands = state.commands): boolean {
+        return commands.some((entry) => entry.command === HVAC_UNIT_COMMAND);
+    },
+    upgradeLegacyHvac() {
+        const commands = state.commands;
+        const heaterType = parseInt(
+            commands.find((entry) => entry.command === "CSHWCHT")?.value || "0",
+            10,
+        );
+        const coolerType = parseInt(
+            commands.find((entry) => entry.command === "CSHWCCT")?.value || "0",
+            10,
+        );
+        const borType = parseInt(
+            commands.find((entry) => entry.command === "CSHWBOR")?.value || "0",
+            10,
+        );
+
+        const indoorEntries = this.getIndoorUnitEntries(commands);
+
+        // Determine the effective type: prefer CHT/CCT, fall back to BOR
+        const effectiveHeaterType = heaterType || borType;
+        const effectiveCoolerType = coolerType || borType;
+        const unitType = effectiveHeaterType || effectiveCoolerType;
+
+        const hvacEntries: HvacUnitEntry[] = indoorEntries.map((entry, index) => ({
+            id: index,
+            type: unitType,
+            address: entry.address,
+            master: entry.isMaster,
+            heating: effectiveHeaterType !== 0,
+            cooling: effectiveCoolerType !== 0,
+            allowConflictingMode: false,
+        }));
+
+        // Remove all legacy commands
+        const cleanedCommands = commands.filter(
+            (entry) => !legacyHvacCommands.has(entry.command),
+        );
+
+        // Add new HVAC commands
+        const hvacCommands: CommandEntry[] = hvacEntries.map((entry) => ({
+            command: HVAC_UNIT_COMMAND,
+            value: serializeHvacUnitEntry(entry),
+        }));
+
+        const nextCommands = [...cleanedCommands, ...hvacCommands];
+        const changedCommandKeys = getChangedCommandKeys(state.commands, nextCommands);
+
+        state = {
+            ...state,
+            commands: nextCommands,
+            commandText: serializeCommands(nextCommands),
+            lastChange: createChange(
+                "field",
+                changedCommandKeys,
+                getTextLineForCommand(nextCommands, HVAC_UNIT_COMMAND),
             ),
         };
         notify();

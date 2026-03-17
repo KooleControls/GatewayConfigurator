@@ -52,8 +52,8 @@
     },
     {
       "value": "scenario-extended-cycles",
-      "label": "Extended cycle profile",
-      "description": "Longer CH/CC timers with tighter temperature band and slower update cadence.",
+      "label": "Extended cycle profile (legacy)",
+      "description": "Longer CH/CC timers with tighter temperature band and slower update cadence. Uses deprecated CSHWBOR.",
       "commands": [
         "CSHWMIT15",
         "CSHWMXT24",
@@ -76,6 +76,52 @@
         "CSHWHCT7200",
         "CSHWMCT22",
         "CSHWSCC0"
+      ]
+    },
+    {
+      "value": "scenario-hvac-units",
+      "label": "HVAC units profile (new format)",
+      "description": "Uses new CSHWHVAC commands with per-unit type, address, and flags.",
+      "commands": [
+        "CSHWPTM5",
+        "CSHWDHC0.1",
+        "CSHWDCC1",
+        "CSHWMIT16",
+        "CSHWMXT26",
+        "CSHWATS20",
+        "CSHWETS18",
+        "CSHWCHA0",
+        "CSHWCHU0",
+        "CSHWCCA0",
+        "CSHWCCU0",
+        "CSHWCTT0",
+        "CSHWHCT0",
+        "CSHWHYS3",
+        "CSHWMCT20",
+        "CSHWSCC1",
+        "CSHWDTN0",
+        "CSHWTVN23000700",
+        "CSHWCDN1",
+        "CSHWCFS0",
+        "CSHWCSW4",
+        "CSHWRAE1",
+        "CSHWTHC3600",
+        "CSHWMLS14400",
+        "CSHWTHR1",
+        "CSHWMTY1",
+        "CSHWMPN502",
+        "CSHWMTO20000",
+        "CSHWMIP192.168.80.61",
+        "CSHWHVAC0;5;32;7",
+        "CSHWHVAC1;5;48;6",
+        "CSHWHVAC2;5;64;6",
+        "CSHWHVAC3;5;80;6",
+        "CSHWHVAC4;5;96;6",
+        "CSHWHVAC5;5;112;7",
+        "CSHWHVAC6;5;128;6",
+        "CSHWHVAC7;5;144;6",
+        "CSHWHVAC8;5;160;7",
+        "CSHWHVAC9;5;176;6"
       ]
     }
   ]

@@ -32,6 +32,17 @@ const indoorUnitsSearchText = [
     "cshwmodiuadb",
 ].join(" ");
 
+const hvacUnitsSearchText = [
+    "hvac units",
+    "hvac unit",
+    "cshwhvac",
+    "indoor",
+    "master",
+    "heating",
+    "cooling",
+    "address",
+].join(" ");
+
 const indoorUnitCommandKeys = new Set([
     "CSHWMODIUCLEAR",
     "CSHWMODIUADD",
@@ -96,11 +107,15 @@ export function getMatchingAccordionSections(query: string) {
         sections.add("hvac");
     }
 
+    if (hvacUnitsSearchText.includes(normalizedQuery)) {
+        sections.add("hvac");
+    }
+
     return [...sections];
 }
 
 export function getAccordionSectionForCommand(commandKey: string) {
-    if (indoorUnitCommandKeys.has(commandKey)) {
+    if (indoorUnitCommandKeys.has(commandKey) || commandKey === "CSHWHVAC") {
         return "hvac";
     }
 
