@@ -14,6 +14,10 @@ export function ThermostatCategory({ searchQuery = "" }: ThermostatCategoryProps
             <CommandField command="CSHWSCC" searchQuery={searchQuery} />
             <CommandField command="CSHWMCT" searchQuery={searchQuery} />
             <CommandField command="CSHWHYS" searchQuery={searchQuery} />
+            <CommandField command="CSHWOHP" searchQuery={searchQuery} />
+            <CommandField command="CSHWOHT" searchQuery={searchQuery} />
+            <CommandField command="CSHWTLT" searchQuery={searchQuery} />
+            <CommandField command="CSHWTUM" searchQuery={searchQuery} />
         </FieldGroup>
     );
 }

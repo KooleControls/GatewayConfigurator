@@ -5,10 +5,7 @@ export type CommandEntry = {
     value: string;
 };
 
-export type IndoorUnitCommand = "CSHWMODIUADD" | "CSHWMODIUADB";
-
 export type IndoorUnitEntry = {
-    command: IndoorUnitCommand;
     address: string;
     isMaster: boolean;
 };
@@ -72,11 +69,11 @@ const commandLines = [
     "CSHWMBD9600",
     "CSHWMODIUCLEAR",
     "CSHWMODIUADD320;1",
-    "CSHWMODIUADB320;1",
 ];
 
 const INDOOR_UNITS_CLEAR_COMMAND = "CSHWMODIUCLEAR";
 const INDOOR_UNITS_ADD_COMMAND = "CSHWMODIUADD";
+// The gateway has no handler for ADB; it is only listed so old configs get cleaned up.
 const INDOOR_UNITS_ADB_COMMAND = "CSHWMODIUADB";
 const indoorUnitManagedCommands = new Set<string>([
     INDOOR_UNITS_CLEAR_COMMAND,
@@ -84,7 +81,18 @@ const indoorUnitManagedCommands = new Set<string>([
     INDOOR_UNITS_ADB_COMMAND,
 ]);
 
+// While any of these is non-zero the gateway builds its units from them and the
+// indoor-unit list, and ignores every CSHWHVAC slot.
+const legacyHvacTypeCommands = ["CSHWCHT", "CSHWCCT", "CSHWBOR"];
+
 const HVAC_UNIT_COMMAND = "CSHWHVAC";
+export const HVAC_SLOT_COUNT = 10;
+
+const HVAC_TYPE_NA = 0;
+const HVAC_TYPE_OPENTHERM = 1;
+const HVAC_TYPE_RELAY = 2;
+const HVAC_TYPE_SAMSUNG = 3;
+const HVAC_TYPE_HISENSE = 9;
 
 const HVAC_FLAG_MASTER = 0x01;
 const HVAC_FLAG_HEATING = 0x02;
@@ -123,14 +131,49 @@ function serializeHvacUnitEntry(entry: HvacUnitEntry): string {
     return `${entry.id};${entry.type};${entry.address};${flags}`;
 }
 
-const legacyHvacCommands = new Set<string>([
-    "CSHWCHT",
-    "CSHWCCT",
-    "CSHWBOR",
-    INDOOR_UNITS_CLEAR_COMMAND,
-    INDOOR_UNITS_ADD_COMMAND,
-    INDOOR_UNITS_ADB_COMMAND,
+// Matches the gateway's default for an unused slot.
+function emptyHvacSlot(id: number): HvacUnitEntry {
+    return {
+        id,
+        type: HVAC_TYPE_NA,
+        address: "0",
+        master: false,
+        heating: false,
+        cooling: false,
+        allowConflictingMode: false,
+    };
+}
+
+function isEmptyHvacSlot(entry: HvacUnitEntry) {
+    return serializeHvacUnitEntry(entry) === serializeHvacUnitEntry(emptyHvacSlot(entry.id));
+}
+
+const hvacManagedCommands = new Set<string>([
+    HVAC_UNIT_COMMAND,
+    ...legacyHvacTypeCommands,
+    ...indoorUnitManagedCommands,
 ]);
+
+function getNumericValue(commands: CommandEntry[], command: string): number {
+    return parseInt(commands.find((entry) => entry.command === command)?.value || "0", 10) || 0;
+}
+
+/** Puts `replacement` where the first managed command was (or at the end) and drops the other managed commands. */
+function replaceManagedCommands(
+    commands: CommandEntry[],
+    managedCommands: Set<string>,
+    replacement: CommandEntry[],
+): CommandEntry[] {
+    const firstManagedIndex = commands.findIndex((entry) => managedCommands.has(entry.command));
+    const insertionIndex = firstManagedIndex >= 0 ? firstManagedIndex : commands.length;
+    const unmanagedCommands = commands.filter((entry) => !managedCommands.has(entry.command));
+
+    return [
+        ...unmanagedCommands.slice(0, insertionIndex),
+        ...replacement,
+        ...unmanagedCommands.slice(insertionIndex),
+    ];
+}
 
 function parseCommand(line: string): CommandEntry {
     const [, command = line, value = ""] = line.match(/^([A-Z]+)(.*)$/) ?? [];
@@ -152,6 +195,59 @@ function parseIndoorUnitValue(value: string) {
         address: rawAddress,
         isMaster: rawRole === "1",
     };
+}
+
+/** Mirrors HvacUnitManager::SetupLegacyHvacs in the gateway firmware. */
+function legacyHvacUnits(commands: CommandEntry[]): HvacUnitEntry[] {
+    let heaterType = getNumericValue(commands, "CSHWCHT");
+    let coolerType = getNumericValue(commands, "CSHWCCT");
+    if (heaterType === HVAC_TYPE_NA && coolerType === HVAC_TYPE_NA) {
+        heaterType = getNumericValue(commands, "CSHWBOR");
+        coolerType = heaterType;
+    }
+
+    const indoorUnits = commands
+        .filter((entry) => entry.command === INDOOR_UNITS_ADD_COMMAND)
+        .map((entry) => parseIndoorUnitValue(entry.value));
+    const units: HvacUnitEntry[] = [];
+
+    const addUnits = (type: number, heating: boolean, cooling: boolean) => {
+        if (type === HVAC_TYPE_NA || type > HVAC_TYPE_HISENSE) return;
+
+        if (type === HVAC_TYPE_OPENTHERM || type === HVAC_TYPE_RELAY) {
+            units.push({
+                id: units.length,
+                type,
+                address: "0",
+                master: true,
+                heating,
+                cooling,
+                allowConflictingMode: false,
+            });
+            return;
+        }
+
+        for (const indoorUnit of indoorUnits) {
+            units.push({
+                id: units.length,
+                type,
+                address: indoorUnit.address,
+                master: indoorUnit.isMaster,
+                heating,
+                cooling,
+                allowConflictingMode: !indoorUnit.isMaster && type !== HVAC_TYPE_SAMSUNG,
+            });
+        }
+    };
+
+    if (heaterType === coolerType) {
+        addUnits(heaterType, true, true);
+    } else {
+        addUnits(heaterType, true, false);
+        addUnits(coolerType, false, true);
+    }
+
+    return units.slice(0, HVAC_SLOT_COUNT);
 }
 
 function getChangedCommandKeys(previous: CommandEntry[], next: CommandEntry[]): string[] {
@@ -252,41 +348,22 @@ export const commandsStore = {
     },
     getIndoorUnitEntries(commands = state.commands): IndoorUnitEntry[] {
         return commands
-            .filter(
-                (entry): entry is CommandEntry & { command: IndoorUnitCommand } =>
-                    entry.command === INDOOR_UNITS_ADD_COMMAND ||
-                    entry.command === INDOOR_UNITS_ADB_COMMAND,
-            )
-            .map((entry) => {
-                const parsedValue = parseIndoorUnitValue(entry.value);
-
-                return {
-                    command: entry.command,
-                    address: parsedValue.address,
-                    isMaster: parsedValue.isMaster,
-                };
-            });
+            .filter((entry) => entry.command === INDOOR_UNITS_ADD_COMMAND)
+            .map((entry) => parseIndoorUnitValue(entry.value));
     },
     setIndoorUnitEntries(entries: IndoorUnitEntry[]) {
-        const existingCommands = state.commands;
-        const firstIndoorIndex = existingCommands.findIndex((entry) =>
-            indoorUnitManagedCommands.has(entry.command),
-        );
-        const insertionIndex = firstIndoorIndex >= 0 ? firstIndoorIndex : existingCommands.length;
-
-        const baseCommands = existingCommands.filter(
-            (entry) => !indoorUnitManagedCommands.has(entry.command),
-        );
-        const before = baseCommands.slice(0, insertionIndex);
-        const after = baseCommands.slice(insertionIndex);
         const indoorUnitCommands: CommandEntry[] = [
             { command: INDOOR_UNITS_CLEAR_COMMAND, value: "" },
             ...entries.map((entry) => ({
-                command: entry.command,
+                command: INDOOR_UNITS_ADD_COMMAND,
                 value: `${entry.address};${entry.isMaster ? 1 : 0}`,
             })),
         ];
-        const commands = [...before, ...indoorUnitCommands, ...after];
+        const commands = replaceManagedCommands(
+            state.commands,
+            indoorUnitManagedCommands,
+            indoorUnitCommands,
+        );
         const changedCommandKeys = getChangedCommandKeys(state.commands, commands);
 
         state = {
@@ -305,25 +382,25 @@ export const commandsStore = {
         return commands
             .filter((entry) => entry.command === HVAC_UNIT_COMMAND)
             .map((entry) => parseHvacUnitValue(entry.value))
-            .filter((entry): entry is HvacUnitEntry => entry !== null);
+            .filter((entry): entry is HvacUnitEntry => entry !== null && !isEmptyHvacSlot(entry));
     },
+    /**
+     * Writes all slots, so a removed unit is also cleared on the gateway, and
+     * zeroes the legacy types so the gateway uses these slots at all.
+     */
     setHvacUnitEntries(entries: HvacUnitEntry[]) {
-        const existingCommands = state.commands;
-        const firstHvacIndex = existingCommands.findIndex(
-            (entry) => entry.command === HVAC_UNIT_COMMAND,
+        const slots = Array.from(
+            { length: HVAC_SLOT_COUNT },
+            (_, id) => entries.find((entry) => entry.id === id) ?? emptyHvacSlot(id),
         );
-        const insertionIndex = firstHvacIndex >= 0 ? firstHvacIndex : existingCommands.length;
-
-        const baseCommands = existingCommands.filter(
-            (entry) => entry.command !== HVAC_UNIT_COMMAND,
-        );
-        const before = baseCommands.slice(0, insertionIndex);
-        const after = baseCommands.slice(insertionIndex);
-        const hvacCommands: CommandEntry[] = entries.map((entry) => ({
-            command: HVAC_UNIT_COMMAND,
-            value: serializeHvacUnitEntry(entry),
-        }));
-        const commands = [...before, ...hvacCommands, ...after];
+        const hvacCommands: CommandEntry[] = [
+            ...legacyHvacTypeCommands.map((command) => ({ command, value: "0" })),
+            ...slots.map((slot) => ({
+                command: HVAC_UNIT_COMMAND,
+                value: serializeHvacUnitEntry(slot),
+            })),
+        ];
+        const commands = replaceManagedCommands(state.commands, hvacManagedCommands, hvacCommands);
         const changedCommandKeys = getChangedCommandKeys(state.commands, commands);
 
         state = {
@@ -338,69 +415,20 @@ export const commandsStore = {
         };
         notify();
     },
+    hasLegacyHvacTypes(commands = state.commands): boolean {
+        return legacyHvacTypeCommands.some((command) => getNumericValue(commands, command) !== 0);
+    },
     hasLegacyHvacCommands(commands = state.commands): boolean {
-        return commands.some((entry) => legacyHvacCommands.has(entry.command));
+        return (
+            this.hasLegacyHvacTypes(commands) ||
+            commands.some((entry) => indoorUnitManagedCommands.has(entry.command))
+        );
     },
     hasNewHvacCommands(commands = state.commands): boolean {
         return commands.some((entry) => entry.command === HVAC_UNIT_COMMAND);
     },
     upgradeLegacyHvac() {
-        const commands = state.commands;
-        const heaterType = parseInt(
-            commands.find((entry) => entry.command === "CSHWCHT")?.value || "0",
-            10,
-        );
-        const coolerType = parseInt(
-            commands.find((entry) => entry.command === "CSHWCCT")?.value || "0",
-            10,
-        );
-        const borType = parseInt(
-            commands.find((entry) => entry.command === "CSHWBOR")?.value || "0",
-            10,
-        );
-
-        const indoorEntries = this.getIndoorUnitEntries(commands);
-
-        // Determine the effective type: prefer CHT/CCT, fall back to BOR
-        const effectiveHeaterType = heaterType || borType;
-        const effectiveCoolerType = coolerType || borType;
-        const unitType = effectiveHeaterType || effectiveCoolerType;
-
-        const hvacEntries: HvacUnitEntry[] = indoorEntries.map((entry, index) => ({
-            id: index,
-            type: unitType,
-            address: entry.address,
-            master: entry.isMaster,
-            heating: effectiveHeaterType !== 0,
-            cooling: effectiveCoolerType !== 0,
-            allowConflictingMode: false,
-        }));
-
-        // Remove all legacy commands
-        const cleanedCommands = commands.filter(
-            (entry) => !legacyHvacCommands.has(entry.command),
-        );
-
-        // Add new HVAC commands
-        const hvacCommands: CommandEntry[] = hvacEntries.map((entry) => ({
-            command: HVAC_UNIT_COMMAND,
-            value: serializeHvacUnitEntry(entry),
-        }));
-
-        const nextCommands = [...cleanedCommands, ...hvacCommands];
-        const changedCommandKeys = getChangedCommandKeys(state.commands, nextCommands);
-
-        state = {
-            ...state,
-            commands: nextCommands,
-            commandText: serializeCommands(nextCommands),
-            lastChange: createChange(
-                "field",
-                changedCommandKeys,
-                getTextLineForCommand(nextCommands, HVAC_UNIT_COMMAND),
-            ),
-        };
-        notify();
+        this.setHvacUnitEntries(legacyHvacUnits(state.commands));
     },
     setCommandsFromText(text: string, editedLine?: number) {
         const commands = parseCommandsText(text);

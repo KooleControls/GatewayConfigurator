@@ -40,6 +40,7 @@ type CommandDefinition = {
     max?: number;
     step?: number;
     options?: { value: string | number; label: string }[];
+    flags?: { bit: number; label: string }[];
     deprecated?: boolean;
     deprecatedMessage?: string;
 };
@@ -154,7 +155,30 @@ export function CommandField({ command, searchQuery = "" }: CommandFieldProps) {
                 ) : null}
             </div>
             <FieldContent className="mt-auto w-full shrink-0 flex-none">
-                {definition.options?.length ? (
+                {definition.flags?.length ? (
+                    <div className="flex flex-wrap gap-3">
+                        {definition.flags.map((flag) => {
+                            const currentFlags = parseInt(value || String(definition.defaultValue ?? 0), 10) || 0;
+
+                            return (
+                                <label key={flag.bit} className="flex items-center gap-1.5 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        className="size-4"
+                                        checked={(currentFlags & flag.bit) !== 0}
+                                        onChange={(event) => {
+                                            const nextFlags = event.target.checked
+                                                ? currentFlags | flag.bit
+                                                : currentFlags & ~flag.bit;
+                                            updateValue(String(nextFlags));
+                                        }}
+                                    />
+                                    <span>{flag.label}</span>
+                                </label>
+                            );
+                        })}
+                    </div>
+                ) : definition.options?.length ? (
                     <Select value={value || String(definition.defaultValue ?? "")} onValueChange={updateValue}>
                         <SelectTrigger className="h-9 w-full bg-background text-sm">
                             <SelectValue placeholder={placeholder} />
