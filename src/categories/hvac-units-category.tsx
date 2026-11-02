@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
     commandsStore,
+    HVAC_SLOT_COUNT,
     type HvacUnitEntry,
     useCommandsStore,
 } from "@/store/commands-store";
@@ -45,6 +46,7 @@ const hvacTypeOptions = [
     { value: 6, label: "CMA - Cool Master Net for Aedes (6)" },
     { value: 7, label: "MIT - Mitsubishi via Intesis RTU (7)" },
     { value: 8, label: "COP - Coolplug via Modbus RTU (8)" },
+    { value: 9, label: "HIS - Hisense B544(E) via Modbus RTU (9)" },
 ];
 
 type HvacUnitsCategoryProps = {
@@ -198,19 +200,21 @@ export function HvacUnitsCategory({ searchQuery = "" }: HvacUnitsCategoryProps) 
                         </div>
                     ))}
 
-                    {entries.length < 10 && (
+                    {entries.length < HVAC_SLOT_COUNT && (
                         <Button
                             type="button"
                             variant="secondary"
                             className="w-fit"
                             onClick={() => {
-                                const nextId = entries.length > 0
-                                    ? Math.max(...entries.map((e) => e.id)) + 1
-                                    : 0;
+                                const usedIds = new Set(entries.map((e) => e.id));
+                                const freeId = Array.from({ length: HVAC_SLOT_COUNT }, (_, id) => id)
+                                    .find((id) => !usedIds.has(id));
+                                if (freeId === undefined) return;
+
                                 updateEntries([
                                     ...entries,
                                     {
-                                        id: Math.min(nextId, 9),
+                                        id: freeId,
                                         type: 0,
                                         address: "320",
                                         master: entries.length === 0,

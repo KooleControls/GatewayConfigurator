@@ -98,7 +98,7 @@ export function IndoorUnitsCategory({ searchQuery = "" }: IndoorUnitsCategoryPro
                 </FieldDescription>
                 <FieldContent className="gap-2">
                     {entries.map((entry, index) => (
-                        <div key={`${entry.command}-${index}`} className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto_auto]">
+                        <div key={index}className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto_auto]">
                             <Input
                                 type="number"
                                 placeholder="320"
@@ -151,7 +151,7 @@ export function IndoorUnitsCategory({ searchQuery = "" }: IndoorUnitsCategoryPro
                         onClick={() => {
                             updateEntries([
                                 ...entries,
-                                { command: "CSHWMODIUADD", address: "320", isMaster: true },
+                                { address: "320", isMaster: true },
                             ]);
                         }}
                     >

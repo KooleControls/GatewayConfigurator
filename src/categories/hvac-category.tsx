@@ -51,6 +51,14 @@ export function HvacCategory({ searchQuery = "" }: HvacCategoryProps) {
                 </>
             ) : (
                 <>
+                    {hasNew && commandsStore.hasLegacyHvacTypes(commands) ? (
+                        <div className="flex items-center gap-2 px-2">
+                            <Badge variant="destructive">Ignored</Badge>
+                            <span className="text-xs text-muted-foreground">
+                                CSHWCHT, CSHWCCT or CSHWBOR is non-zero, so the gateway ignores the CSHWHVAC units. Edit a unit to reset them to 0.
+                            </span>
+                        </div>
+                    ) : null}
                     <FieldGroup className="grid grid-cols-1 gap-6 px-2 pb-2 md:grid-cols-2">
                         <CommandField command="CSHWCFS" searchQuery={searchQuery} />
                         <CommandField command="CSHWCSW" searchQuery={searchQuery} />
